@@ -85,6 +85,8 @@ button:disabled { opacity: 0.4; }
 .pave { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .touche { min-height: 64px; font-size: 1.75rem; }
 .touche-valider { background: var(--succes); border-color: var(--succes); color: #fff; font-size: 1.1rem; font-weight: bold; }
+.touche.large { grid-column: span 2; }
+.touche.pleine { grid-column: 1 / -1; }
 .touche-effacer { font-size: 1.5rem; }
 .fin { display: flex; flex-direction: column; gap: 16px; text-align: center; }
 .score { margin: 0; font-size: 3rem; font-weight: bold; }

@@ -12,10 +12,12 @@ function monter(maxChiffres?: number) {
 }
 
 describe('creerPave', () => {
-  it('12 touches dans l\'ordre 1-9, Effacer, 0, Valider', () => {
+  it('12 touches dans l\'ordre 1-9, 0, Effacer, Valider ; 0 et Valider élargis', () => {
     const { pave } = monter()
     const touches = [...pave.element.querySelectorAll<HTMLButtonElement>('button.touche')].map((b) => b.dataset.touche)
-    expect(touches).toEqual(['1', '2', '3', '4', '5', '6', '7', '8', '9', 'effacer', '0', 'valider'])
+    expect(touches).toEqual(['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'effacer', 'valider'])
+    expect(pave.element.querySelector('[data-touche="0"]')!.classList.contains('large')).toBe(true)
+    expect(pave.element.querySelector('[data-touche="valider"]')!.classList.contains('pleine')).toBe(true)
   })
 
   it('taper 1,2,3 donne 123 et notifie', () => {

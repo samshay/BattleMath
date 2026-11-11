@@ -8,17 +8,18 @@ describe('routeur', () => {
   })
   it('parse parents et accueil', () => {
     expect(parserHash('#/parents')).toEqual({ nom: 'parents' })
+    expect(parserHash('#/parcours')).toEqual({ nom: 'parcours' })
     expect(parserHash('')).toEqual({ nom: 'accueil' })
     expect(parserHash('#/')).toEqual({ nom: 'accueil' })
   })
-  it.each(['#/jeu/add-9/5', '#/jeu/add-2/0', '#/jeu/add-2/9', '#/jeu/add-2/1.5', '#/jeu/add-2', '#/x'])(
+  it.each(['#/jeu/add-9/5', '#/jeu/add-2/0', '#/jeu/add-2/9', '#/jeu/add-2/1.5', '#/jeu/add-2', '#/x', '#/parcours/1'])(
     '%s retombe sur accueil',
     (hash) => {
       expect(parserHash(hash)).toEqual({ nom: 'accueil' })
     },
   )
   it('versHash est l\'inverse de parserHash', () => {
-    for (const r of [{ nom: 'accueil' }, { nom: 'parents' }, { nom: 'jeu', parcours: 'mix-3', niveau: 8 }] as const) {
+    for (const r of [{ nom: 'accueil' }, { nom: 'parcours' }, { nom: 'parents' }, { nom: 'jeu', parcours: 'mix-3', niveau: 8 }] as const) {
       expect(parserHash(versHash(r))).toEqual(r)
     }
     expect(versHash({ nom: 'jeu', parcours: 'add-2', niveau: 5 })).toBe('#/jeu/add-2/5')
