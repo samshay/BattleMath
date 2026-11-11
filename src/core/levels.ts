@@ -1,5 +1,5 @@
 // Configuration des niveaux : transcription de la section 2.3 de la spec.
-// Seul fichier à modifier pour régler les temps cibles (en ms) et les plages.
+// Seul fichier à modifier pour régler les temps cibles (en secondes, convertis en ms) et les plages.
 import type { Op, ParcoursId, Taille } from './types'
 import { decomposerParcours } from './types'
 import { valeurs, type Plage, type TypeDef } from './typesCalcul'

@@ -1,25 +1,20 @@
 import type { Calcul, Fait, Op, ParcoursId } from './types'
 import { decomposerParcours } from './types'
 import type { Rng } from './rng'
-import { genererCalcul, typeAccepte, type TypeDef } from './typesCalcul'
+import { calculer, genererCalcul, typeAccepte, type TypeDef } from './typesCalcul'
 import { niveau, TYPES } from './levels'
 import { cleFait, estMaitrise } from './faits'
 
 export const TAILLE_SERIE = 10
 export const MAX_FAITS_FAIBLES = 3
 
+const OPS = ['add', 'sub', 'mul'] as const
 const MAX_ESSAIS = 200
 const MAX_REMELANGES = 20
 
 // Clé d'unicité : comme cleFait, mais distingue les compléments « a + ▢ = 10 ».
 function cleUnicite(c: Calcul): string {
   return c.inconnue === 'b' ? `${cleFait(c)}?${c.a}` : cleFait(c)
-}
-
-function calculer(op: Op, a: number, b: number): number {
-  if (op === 'add') return a + b
-  if (op === 'sub') return a - b
-  return a * b
 }
 
 // Reconstruit un calcul depuis une clé de fait « op:a·b » si une def du niveau l'accepte.
@@ -45,12 +40,29 @@ function sansDoublonConsecutif(serie: readonly Calcul[]): boolean {
   return true
 }
 
-export function genererSerie(parcours: ParcoursId, n: number, rng: Rng, faits: Record<string, Fait> = {}): Calcul[] {
-  const defs = niveau(parcours, n).types.map((id) => {
+function defsDuNiveau(parcours: ParcoursId, n: number): TypeDef[] {
+  return niveau(parcours, n).types.map((id) => {
     const def = TYPES[id]
     if (!def) throw new Error(`genererSerie: type inconnu "${id}"`)
     return def
   })
+}
+
+// Tire un calcul du niveau dont la clé d'unicité n'est pas dans `exclues` (remplacement après interruption).
+export function genererRemplacement(
+  parcours: ParcoursId, n: number, rng: Rng, exclues: ReadonlySet<string>, faits: Record<string, Fait> = {},
+): Calcul {
+  let dernier = genererSerie(parcours, n, rng, faits)[0] as Calcul
+  for (let essai = 0; essai < MAX_ESSAIS && exclues.has(cleUnicite(dernier)); essai++) {
+    dernier = genererSerie(parcours, n, rng, faits)[0] as Calcul
+  }
+  return dernier
+}
+
+export { cleUnicite }
+
+export function genererSerie(parcours: ParcoursId, n: number, rng: Rng, faits: Record<string, Fait> = {}): Calcul[] {
+  const defs = defsDuNiveau(parcours, n)
   const { op, taille } = decomposerParcours(parcours)
   const serie: Calcul[] = []
   const utilises = new Set<string>()
@@ -63,7 +75,10 @@ export function genererSerie(parcours: ParcoursId, n: number, rng: Rng, faits: R
   const tirer = (pool: readonly TypeDef[]): Calcul => {
     const precedent = serie[serie.length - 1]
     for (let essai = 0; essai < MAX_ESSAIS; essai++) {
-      const def = rng.pick(pool)
+      // Mixte : l'opération est tirée d'abord, pour que chaque op pèse un tiers quel que soit le nombre de types.
+      const choisie = op === 'mix' && pool === defs ? rng.pick(OPS) : null
+      const sousPool = choisie ? defs.filter((d) => d.op === choisie) : pool
+      const def = rng.pick(sousPool)
       const c = genererCalcul(def, rng)
       const cle = cleUnicite(c)
       if (def.repetitions) {

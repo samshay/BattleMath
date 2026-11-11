@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { formaterCalcul, formaterSecondes } from '../../src/core/format'
+import { formaterCalcul, formaterSecondes, nomParcours } from '../../src/core/format'
 
 test('multiplication', () => {
   expect(formaterCalcul({ op: 'mul', a: 7, b: 8, resultat: 56, inconnue: 'resultat' })).toBe('7 × 8')
@@ -15,4 +15,9 @@ test('formaterSecondes', () => {
   expect(formaterSecondes(3000)).toBe('3,0 s')
   expect(formaterSecondes(6249)).toBe('6,2 s')
   expect(formaterSecondes(6250)).toBe('6,3 s')
+})
+
+test('nomParcours', () => {
+  expect(nomParcours('add-1')).toBe('Additions 1 chiffre')
+  expect(nomParcours('mix-2')).toBe('Mixte 2 chiffres')
 })

@@ -29,7 +29,7 @@ function tirer(p: Plage, rng: Rng): number {
   return 'valeurs' in p ? rng.pick(p.valeurs) : rng.int(p[0], p[1])
 }
 
-function calculer(op: Op, a: number, b: number): number {
+export function calculer(op: Op, a: number, b: number): number {
   if (op === 'add') return a + b
   if (op === 'sub') return a - b
   return a * b

@@ -4,7 +4,7 @@ import { parcoursId, type Calcul, type Fait } from '../../src/core/types'
 import { niveau, TYPES } from '../../src/core/levels'
 import { typeAccepte } from '../../src/core/typesCalcul'
 import { cleFait, faitVide } from '../../src/core/faits'
-import { genererSerie, TAILLE_SERIE, MAX_FAITS_FAIBLES } from '../../src/core/serie'
+import { cleUnicite, genererRemplacement, genererSerie, TAILLE_SERIE, MAX_FAITS_FAIBLES } from '../../src/core/serie'
 
 const faible = (): Fait => ({
   tentatives: 2,
@@ -128,4 +128,21 @@ test('pondération en mixte : faits faibles inclus et au moins 2 par opération'
 
 test('déterministe', () => {
   expect(genererSerie('add-2', 5, createRng(9))).toEqual(genererSerie('add-2', 5, createRng(9)))
+})
+
+test('mixte niveau « tout » : chaque opération pèse entre 28 % et 39 %', () => {
+  const total = { add: 0, sub: 0, mul: 0 }
+  for (let s = 0; s < 2000; s++) for (const c of genererSerie('mix-1', 6, createRng(s))) total[c.op]++
+  const n = total.add + total.sub + total.mul
+  for (const op of ['add', 'sub', 'mul'] as const) {
+    expect(total[op] / n).toBeGreaterThan(0.28)
+    expect(total[op] / n).toBeLessThan(0.39)
+  }
+})
+
+test('genererRemplacement : jamais une clé exclue', () => {
+  const rng = createRng(3)
+  const serie = genererSerie('add-1', 2, rng)
+  const exclues = new Set(serie.map(cleUnicite))
+  for (let i = 0; i < 200; i++) expect(exclues.has(cleUnicite(genererRemplacement('add-1', 2, rng, exclues)))).toBe(false)
 })
