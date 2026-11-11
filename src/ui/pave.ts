@@ -1,4 +1,5 @@
 import { h } from './dom'
+import { icone } from './icones'
 
 export interface Pave {
   element: HTMLElement
@@ -46,11 +47,11 @@ export function creerPave(opts: {
   }
 
   for (const t of DISPOSITION) {
-    const texte = t === 'effacer' ? '⌫' : t === 'valider' ? 'Valider' : t
+    const contenu: Node | string = t === 'effacer' ? icone('effacer', 30) : t === 'valider' ? 'Valider' : t
     const onclick = t === 'effacer' ? effacer
       : t === 'valider' ? () => { if (actif && valeur !== '') opts.onValider(Number(valeur)) }
       : () => taper(t)
-    const b = h('button', { type: 'button', class: `touche touche-${t}${CLASSE_LARGEUR[t] ?? ''}`, 'data-touche': t, onclick }, texte)
+    const b = h('button', { type: 'button', class: `touche touche-${t}${CLASSE_LARGEUR[t] ?? ''}`, 'data-touche': t, onclick }, contenu)
     if (t === 'effacer') b.setAttribute('aria-label', 'Effacer')
     boutons.set(t, b)
   }

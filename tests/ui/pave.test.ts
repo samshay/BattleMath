@@ -95,4 +95,12 @@ describe('creerPave', () => {
     expect(pave.element.classList.contains('inactif')).toBe(false)
     expect(touche('valider').disabled).toBe(false)
   })
+
+  it('Effacer : icône SVG, aria-label conservé, plus de glyphe', () => {
+    const { touche } = monter()
+    const b = touche('effacer')
+    expect(b.getAttribute('aria-label')).toBe('Effacer')
+    expect(b.querySelector('.icone-effacer svg')).not.toBeNull()
+    expect(b.textContent).toBe('')
+  })
 })
