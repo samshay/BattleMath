@@ -1,13 +1,12 @@
 import './style.css'
 import { registerSW } from 'virtual:pwa-register'
-import { decomposerParcours } from './core/types'
 import { createRng } from './core/rng'
 import { charger, sauver } from './storage/store'
 import type { StockageLike } from './storage/store'
 import { profilActif } from './storage/schema'
 import type { Donnees } from './storage/schema'
 import { h } from './ui/dom'
-import { rendreAccueil } from './ui/accueil'
+import { rendreAccueil, selectionDepuisProfil } from './ui/accueil'
 import type { ContexteApp } from './ui/accueil'
 import { rendreJeu } from './ui/jeu'
 import { creerVerrouSession, rendreParents } from './ui/parents'
@@ -40,9 +39,7 @@ function telecharger(nom: string, contenu: string): void {
 
 const stockage = localStorageOuNull()
 function selectionInitiale(): ContexteApp['selection'] {
-  const actif = profilActif(donnees)
-  const s = actif.dernierParcours ? decomposerParcours(actif.dernierParcours) : { op: 'add' as const, taille: 1 as const }
-  return s.taille === 3 && !actif.reglages.parcoursAvances ? { op: s.op, taille: 1 } : s
+  return selectionDepuisProfil(profilActif(donnees))
 }
 const { donnees, avertissement } = charger(stockage)
 

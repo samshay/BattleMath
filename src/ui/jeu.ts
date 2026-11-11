@@ -51,7 +51,8 @@ export function rendreJeu(
   deps: { horloge?: Horloge; visibilite?: Visibilite; rng?: Rng; delaiFeedbackMs?: number } = {},
 ): EcranJeu {
   const racine = h('div', { class: 'jeu' })
-  if (etatNiveau(profilActif(ctx.donnees).series, parcours, n) === 'verrouille') {
+  const actif = profilActif(ctx.donnees)
+  if (etatNiveau(actif.series, parcours, n) === 'verrouille') {
     ctx.naviguer({ nom: 'accueil' })
     return { element: racine, session: () => { throw new Error('niveau verrouillé') }, detruire: () => {} }
   }
@@ -61,8 +62,8 @@ export function rendreJeu(
   const rng = deps.rng ?? createRng(Date.now())
   const delai = deps.delaiFeedbackMs ?? 400
 
-  const cibleMs = cibleEffective(niveau(parcours, n).cibleMs, profilActif(ctx.donnees).reglages.vitesse)
-  let s = creerSession(parcours, n, cibleMs, genererSerie(parcours, n, rng, profilActif(ctx.donnees).faits))
+  const cibleMs = cibleEffective(niveau(parcours, n).cibleMs, actif.reglages.vitesse)
+  let s = creerSession(parcours, n, cibleMs, genererSerie(parcours, n, rng, actif.faits))
   let t0: number | null = horloge.now()
   let quitte = false
   let interrompu = false
@@ -92,7 +93,7 @@ export function rendreJeu(
     cache = true
     if (s.phase !== 'question') return
     const exclues = new Set(s.calculs.map(cleUnicite))
-    s = annulerCourant(s, genererRemplacement(parcours, n, rng, exclues, profilActif(ctx.donnees).faits))
+    s = annulerCourant(s, genererRemplacement(parcours, n, rng, exclues, actif.faits))
     t0 = null
     interrompu = true
     pave.vider()

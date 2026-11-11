@@ -3,19 +3,20 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { rendreAccueil } from '../../src/ui/accueil'
 import type { ContexteApp } from '../../src/ui/accueil'
 import { bannierInstallation, detecterPlateforme } from '../../src/ui/installation'
-import { donneesVides } from '../../src/storage/schema'
+import { donneesVides, profilActif } from '../../src/storage/schema'
 import type { Donnees } from '../../src/storage/schema'
-import { avecProfil } from '../aide/donnees'
+import { avecProfil, deuxProfils } from '../aide/donnees'
 import type { Serie } from '../../src/core/types'
 
 function ctxDe(donnees: Donnees = donneesVides(), avertissement: ContexteApp['avertissement'] = null): ContexteApp {
-  return {
+  const ctx: ContexteApp = {
     donnees,
     avertissement,
-    sauver: vi.fn(() => true),
+    sauver: vi.fn((d: Donnees) => { ctx.donnees = d; return true }),
     naviguer: vi.fn(),
     selection: { op: 'add', taille: 1 },
   }
+  return ctx
 }
 
 const serieValidee = (parcours: Serie['parcours'], niveau: number): Serie => ({
@@ -95,6 +96,51 @@ describe('rendreAccueil', () => {
   it('total d\'étoiles dans l\'en-tête', () => {
     const d = avecProfil({ series: [serieValidee('add-1', 1)] })
     expect(rendreAccueil(ctxDe(d)).querySelector('header')!.textContent).toContain('★ 2')
+  })
+})
+
+describe('profils sur l\'accueil', () => {
+  it('2 profils : 2 pastilles, étoiles du profil actif', () => {
+    const d = deuxProfils({ series: [serieValidee('add-1', 1)] }, {})
+    const racine = rendreAccueil(ctxDe(d))
+    expect(racine.querySelectorAll('button.profil')).toHaveLength(2)
+    expect(racine.querySelector('header')!.textContent).toContain('★ 2')
+  })
+
+  it('un seul profil : la rangée est quand même affichée', () => {
+    expect(rendreAccueil(ctxDe()).querySelectorAll('button.profil')).toHaveLength(1)
+  })
+
+  it('clic sur l\'autre profil : sauver, grille sur son dernier parcours', () => {
+    const d = deuxProfils({}, { dernierParcours: 'mul-2', series: [serieValidee('mul-2', 1)] })
+    const ctx = ctxDe(d)
+    const racine = rendreAccueil(ctx)
+    racine.querySelector<HTMLButtonElement>('button.profil[data-id="p2"]')!.click()
+    expect(ctx.sauver).toHaveBeenCalledTimes(1)
+    expect(profilActif(vi.mocked(ctx.sauver).mock.calls[0]![0]).id).toBe('p2')
+    expect(ctx.selection).toEqual({ op: 'mul', taille: 2 })
+    expect(racine.querySelector('button.op[data-op="mul"]')!.classList.contains('actif')).toBe(true)
+    expect(racine.querySelector('button.profil[data-id="p2"]')!.classList.contains('actif')).toBe(true)
+    expect(racine.querySelector('header')!.textContent).toContain('★ 2')
+    expect(racine.querySelector('[data-test="continuer"]')).not.toBeNull()
+  })
+
+  it('profil sans dernier parcours : retour sur add-1', () => {
+    const ctx = ctxDe(deuxProfils())
+    ctx.selection = { op: 'mul', taille: 2 }
+    const racine = rendreAccueil(ctx)
+    racine.querySelector<HTMLButtonElement>('button.profil[data-id="p2"]')!.click()
+    expect(ctx.selection).toEqual({ op: 'add', taille: 1 })
+  })
+
+  it('bascule vers un profil dont le 3 chiffres est masqué : taille 1, pas de Continuer', () => {
+    const d = deuxProfils({}, { dernierParcours: 'add-3', series: [serieValidee('add-3', 1)] })
+    const ctx = ctxDe(d)
+    const racine = rendreAccueil(ctx)
+    racine.querySelector<HTMLButtonElement>('button.profil[data-id="p2"]')!.click()
+    expect(ctx.selection.taille).toBe(1)
+    expect(racine.querySelector('[data-test="continuer"]')).toBeNull()
+    expect(racine.querySelectorAll('button.taille')).toHaveLength(2)
   })
 })
 

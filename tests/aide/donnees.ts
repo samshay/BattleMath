@@ -20,3 +20,17 @@ export function fixtureV1() {
     faits: { '2+3': { tentatives: 3, erreurs: 1, tempsCumule: 9000, derniers: [{ juste: true, temps: 3000 }] } },
   }
 }
+
+/** Données v2 à deux profils `p1` (Joueur 1, bleu) et `p2` (Joueur 2), chacun modifié par son patch. */
+export function deuxProfils(patch1: Partial<Profil> = {}, patch2: Partial<Profil> = {}, actif = 'p1'): Donnees {
+  const d = donneesVides()
+  const base = d.profils[0]!
+  return {
+    ...d,
+    profilActif: actif,
+    profils: [
+      { ...base, ...patch1 },
+      { ...base, id: 'p2', prenom: 'Joueur 2', couleur: 'vert', ...patch2 },
+    ],
+  }
+}

@@ -1,11 +1,13 @@
-import { parcoursId } from '../core/types'
+import { decomposerParcours, parcoursId } from '../core/types'
 import type { ParcoursOp, Taille } from '../core/types'
 import { etatsParcours, parcoursVisibles, prochainNiveau, totalEtoiles } from '../core/progression'
 import type { Chargement } from '../storage/store'
 import { profilActif } from '../storage/schema'
-import type { Donnees } from '../storage/schema'
+import type { Donnees, Profil } from '../storage/schema'
 import { nomParcours } from '../core/format'
+import { choisirProfil } from '../storage/profils'
 import { h } from './dom'
+import { rangeeProfils } from './profils'
 import { bannierInstallation, detecterPlateforme, estStandalone } from './installation'
 import type { Route } from './router'
 
@@ -33,6 +35,12 @@ function memoriserFermeture(): void {
   try { window.localStorage.setItem(CLE_BANNIERE, '1') } catch { /* stockage bloqué : bannière réaffichée */ }
 }
 
+/** Parcours affiché à l'ouverture d'un profil : son dernier parcours, sinon additions à 1 chiffre. */
+export function selectionDepuisProfil(p: Profil): { op: ParcoursOp; taille: Taille } {
+  const s = p.dernierParcours ? decomposerParcours(p.dernierParcours) : { op: 'add' as const, taille: 1 as const }
+  return s.taille === 3 && !p.reglages.parcoursAvances ? { op: s.op, taille: 1 } : s
+}
+
 export function rendreAccueil(ctx: ContexteApp): HTMLElement {
   const racine = h('div', { class: 'accueil' })
   const { plateforme, dejaInstallee } = detecterPlateforme(navigator.userAgent, estStandalone())
@@ -50,6 +58,12 @@ export function rendreAccueil(ctx: ContexteApp): HTMLElement {
     if (!fermee) enfants.push(bannierInstallation(dejaInstallee, plateforme, () => { fermee = true; memoriserFermeture() }))
 
     enfants.push(h('header', {}, h('h1', {}, 'BattleMath'), h('span', { class: 'etoiles' }, `★ ${totalEtoiles(donnees.series)}`)))
+
+    enfants.push(rangeeProfils(ctx.donnees.profils, donnees.id, (id) => {
+      ctx.sauver(choisirProfil(ctx.donnees, id))
+      Object.assign(ctx.selection, selectionDepuisProfil(profilActif(ctx.donnees)))
+      dessiner()
+    }))
 
     if (donnees.dernierParcours && parcoursVisibles(donnees.reglages.parcoursAvances).includes(donnees.dernierParcours)) {
       const n = prochainNiveau(donnees.series, donnees.dernierParcours)

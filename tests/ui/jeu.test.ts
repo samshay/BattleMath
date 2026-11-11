@@ -5,7 +5,7 @@ import type { Visibilite } from '../../src/ui/jeu'
 import type { ContexteApp } from '../../src/ui/accueil'
 import { donneesVides, profilActif } from '../../src/storage/schema'
 import type { Donnees } from '../../src/storage/schema'
-import { avecProfil } from '../aide/donnees'
+import { avecProfil, deuxProfils } from '../aide/donnees'
 import { createRng } from '../../src/core/rng'
 import { calculCourant } from '../../src/game/session'
 import { reponseAttendue } from '../../src/core/faits'
@@ -62,6 +62,21 @@ describe('rendreJeu', () => {
     const lent = monter({ donnees: d })
     expect(lent.ecran.session().cibleMs).toBe(normal.ecran.session().cibleMs * 1.5)
     expect(lent.q('.objectif')!.textContent).toContain(`moins de ${(lent.ecran.session().cibleMs / 1000).toFixed(1).replace('.', ',')} secondes`)
+  })
+
+  it('la série est enregistrée dans le profil actif', () => {
+    const j = monter({ donnees: deuxProfils({}, {}, 'p2') })
+    for (let i = 0; i < 10; i++) j.repondreJuste()
+    const d = vi.mocked(j.ctx.sauver).mock.calls[0]![0]
+    expect(d.profils.find((p) => p.id === 'p2')!.series).toHaveLength(1)
+    expect(d.profils.find((p) => p.id === 'p1')!.series).toHaveLength(0)
+  })
+
+  it('l\'objectif suit la vitesse du profil actif', () => {
+    const tranquille = { parcoursAvances: false, vitesse: 'tranquille' as const }
+    const normal = monter({ donnees: deuxProfils({}, { reglages: tranquille }, 'p1') })
+    const lent = monter({ donnees: deuxProfils({}, { reglages: tranquille }, 'p2') })
+    expect(lent.ecran.session().cibleMs).toBe(normal.ecran.session().cibleMs * 1.5)
   })
 
   it('tout juste : écran de fin, une seule sauvegarde, série validée et 10 faits', () => {
