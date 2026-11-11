@@ -4,7 +4,7 @@ import { parcoursId, type Calcul, type Fait } from '../../src/core/types'
 import { niveau, TYPES } from '../../src/core/levels'
 import { typeAccepte } from '../../src/core/typesCalcul'
 import { cleFait, faitVide } from '../../src/core/faits'
-import { cleUnicite, genererRemplacement, genererSerie, TAILLE_SERIE, MAX_FAITS_FAIBLES } from '../../src/core/serie'
+import { genererRemplacement, genererSerie, TAILLE_SERIE, MAX_FAITS_FAIBLES } from '../../src/core/serie'
 
 const faible = (): Fait => ({
   tentatives: 2,

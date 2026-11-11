@@ -13,7 +13,7 @@ const MAX_ESSAIS = 200
 const MAX_REMELANGES = 20
 
 // Clé d'unicité : comme cleFait, mais distingue les compléments « a + ▢ = 10 ».
-function cleUnicite(c: Calcul): string {
+export function cleUnicite(c: Calcul): string {
   return c.inconnue === 'b' ? `${cleFait(c)}?${c.a}` : cleFait(c)
 }
 
@@ -58,8 +58,6 @@ export function genererRemplacement(
   }
   return dernier
 }
-
-export { cleUnicite }
 
 export function genererSerie(parcours: ParcoursId, n: number, rng: Rng, faits: Record<string, Fait> = {}): Calcul[] {
   const defs = defsDuNiveau(parcours, n)
