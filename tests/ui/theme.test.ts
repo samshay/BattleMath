@@ -23,6 +23,11 @@ describe('thème spatial', () => {
     expect(horsRoot).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
     expect(horsRoot).not.toMatch(/rgba?\(/)
   })
+  it('état enfoncé : les boutons réagissent sous le doigt', () => {
+    const css = lire('src/style.css')
+    expect(css).toMatch(/button:active:not\(:disabled\)\s*\{[^}]*transform: scale\(/)
+    expect(css).toMatch(/\.pave\.juste \.touche-valider\s*\{/)
+  })
   it('plus aucun glyphe ★ ✨ ⌫ dans src/ui', () => {
     for (const f of readdirSync(new URL('../../src/ui', import.meta.url))) {
       expect(lire(`src/ui/${f}`), f).not.toMatch(/[★✨⌫]/)

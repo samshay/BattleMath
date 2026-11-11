@@ -150,6 +150,29 @@ describe('rendreJeu', () => {
     }
   })
 
+  it('délai par défaut 250 ms ; le pavé porte la classe juste pendant le retour', () => {
+    vi.useFakeTimers()
+    try {
+      const ctx = ctxDe()
+      const ecran = rendreJeu(ctx, 'mul-1', 1, {
+        horloge: { now: () => 0 }, visibilite: { onCache: () => () => {}, onVisible: () => () => {} }, rng: createRng(1),
+      })
+      const touche = (c: string) => ecran.element.querySelector<HTMLButtonElement>(`button.touche[data-touche="${c}"]`)!
+      const pave = ecran.element.querySelector('.pave')!
+      expect(pave.classList.contains('juste')).toBe(false)
+      for (const c of String(reponseAttendue(calculCourant(ecran.session())))) touche(c).click()
+      touche('valider').click()
+      expect(pave.classList.contains('juste')).toBe(true)
+      vi.advanceTimersByTime(249)
+      expect(ecran.session().index).toBe(0)
+      vi.advanceTimersByTime(1)
+      expect(ecran.session().index).toBe(1)
+      expect(pave.classList.contains('juste')).toBe(false)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('interruption pendant le feedback : le chrono du calcul suivant démarre au retour', () => {
     vi.useFakeTimers()
     try {

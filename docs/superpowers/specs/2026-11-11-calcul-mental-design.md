@@ -284,7 +284,9 @@ sélection de texte, pas de clavier système : le pavé est dans la page.
 - Pavé : 0-9, Effacer, Valider, en grille 3 × 4, touches ≥ 56 px,
   utilisables au pouce. Valider inactif tant que la réponse est vide.
   Réponse limitée à 4 chiffres.
-- Juste : court retour visuel (≈ 400 ms) puis calcul suivant.
+- Juste : court retour visuel (≈ 250 ms : réponse et bouton Valider en
+  vert, bouton enfoncé) puis calcul suivant. Tous les boutons ont un état
+  enfoncé immédiat (`:active`) pour que l'appui réponde sous le doigt.
 - Faux : la réponse de l'enfant est barrée, la bonne réponse s'affiche
   en grisé dans la zone de réponse, et l'enfant doit la **retaper** puis
   Valider pour passer au suivant (inspiré de XtraMath et Rocket Math).

@@ -75,7 +75,7 @@ export function rendreJeu(
   const horloge = deps.horloge ?? horlogeParDefaut
   const visibilite = deps.visibilite ?? visibiliteParDefaut
   const rng = deps.rng ?? createRng(Date.now())
-  const delai = deps.delaiFeedbackMs ?? 400
+  const delai = deps.delaiFeedbackMs ?? 250
 
   const cibleMs = cibleEffective(niveau(parcours, n).cibleMs, actif.reglages.vitesse)
   let s = creerSession(parcours, n, cibleMs, genererSerie(parcours, n, rng, actif.faits))
@@ -145,6 +145,7 @@ export function rendreJeu(
     enfants.push(saisieEl)
     reponseEl.replaceChildren(...enfants)
     reponseEl.classList.toggle('juste', s.phase === 'feedback')
+    pave.element.classList.toggle('juste', s.phase === 'feedback')
     reponseEl.classList.toggle('correction', s.phase === 'correction')
   }
 
