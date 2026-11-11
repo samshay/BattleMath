@@ -378,4 +378,22 @@ describe('rendreJeu', () => {
       expect(j.q('[data-test="record"]')).toBeNull()
     })
   })
+
+  it('barre du haut : Retour avec icône à gauche, mascotte du parcours à droite', () => {
+    const j = monter({ parcours: 'add-1' })
+    const barre = j.ecran.element.firstElementChild!
+    expect(barre.classList.contains('barre')).toBe(true)
+    const retour = barre.querySelector('[data-test="retour"]')!
+    expect(retour.textContent).toBe('Retour')
+    expect(retour.querySelector('.icone-retour')).not.toBeNull()
+    const m = barre.querySelector<HTMLElement>('[data-test="mascotte"]')!
+    expect(m.dataset.personnage).toBe('alien-add')
+    expect(m.querySelector('.illustration-alien-add svg')).not.toBeNull()
+    expect(m.querySelector('[aria-hidden="true"]')).not.toBeNull()
+    expect(j.q('.entete [data-test="retour"]')).toBeNull()
+  })
+
+  it.each([['sub-1', 'alien-sub'], ['mul-2', 'alien-mul'], ['mix-1', 'boss-mix']] as const)('mascotte de %s : %s', (parcours, nom) => {
+    expect(monter({ parcours }).q<HTMLElement>('[data-test="mascotte"]')!.dataset.personnage).toBe(nom)
+  })
 })

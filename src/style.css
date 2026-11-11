@@ -104,16 +104,19 @@ button:disabled { opacity: 0.4; }
 /* Jeu */
 .jeu { display: flex; flex-direction: column; gap: 12px; }
 .entete { display: flex; flex-direction: column; gap: 8px; align-items: center; }
-.pastilles { display: flex; gap: 6px; }
-.pastille { width: 12px; height: 12px; border-radius: 50%; background: var(--bord); }
+.barre { display: flex; justify-content: space-between; align-items: center; }
+.pastilles { display: flex; gap: 7px; }
+.pastille { width: 14px; height: 14px; box-sizing: border-box; border-radius: 50%; background: transparent; border: 2px solid var(--texte-doux); }
+.pastille[data-etat="en_cours"], .pastille[data-etat="juste"], .pastille[data-etat="faux"] { border: 0; }
 .pastille[data-etat="en_cours"] { background: var(--primaire); }
 .pastille[data-etat="juste"] { background: var(--succes); }
 .pastille[data-etat="faux"] { background: var(--erreur); }
 .objectif { margin: 0; font-size: 0.9rem; color: var(--texte-doux); }
-.discret { min-height: 40px; font-size: 0.9rem; border-color: transparent; background: transparent; color: var(--texte-doux); }
-.calcul { font-size: 3rem; text-align: center; margin-top: 16px; }
-.reponse { font-size: 2.5rem; min-height: 3.5rem; text-align: center; }
-.reponse.juste { color: var(--succes); }
+.discret { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; font-size: 1rem; font-weight: 800; border-color: transparent; background: transparent; color: var(--texte-doux); padding: 0; }
+.calcul { font-size: 4.25rem; font-weight: 700; line-height: 1; text-align: center; margin-top: 8px; }
+.reponse { min-height: 76px; box-sizing: border-box; border-radius: 22px; background: var(--surface); border: 2px solid var(--primaire); display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: 700; gap: 8px; text-align: center; }
+.reponse.juste { border-color: var(--succes); }
+.reponse.correction { border-color: var(--erreur); }
 .barree { text-decoration: line-through; color: var(--erreur); }
 .attendu { color: var(--texte-doux); }
 .pave { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }

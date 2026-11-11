@@ -6,7 +6,8 @@ import { cibleEffective } from '../core/validation'
 import { etatNiveau, record } from '../core/progression'
 import { formaterCalcul, formaterSecondes } from '../core/format'
 import { reponseAttendue } from '../core/faits'
-import type { ParcoursId } from '../core/types'
+import { decomposerParcours } from '../core/types'
+import type { ParcoursId, ParcoursOp } from '../core/types'
 import { enregistrerSerie } from '../storage/store'
 import { COULEURS, profilActif } from '../storage/schema'
 import {
@@ -17,6 +18,10 @@ import { h } from './dom'
 import { MSG_NON_ENREGISTRE } from './accueil'
 import type { ContexteApp } from './accueil'
 import { creerPave } from './pave'
+import { icone, illustration } from './icones'
+import type { NomIllustration } from './icones'
+
+const MASCOTTES: Record<ParcoursOp, NomIllustration> = { add: 'alien-add', sub: 'alien-sub', mul: 'alien-mul', mix: 'boss-mix' }
 
 export interface Horloge { now(): number }
 export interface Visibilite { onCache(cb: () => void): () => void; onVisible(cb: () => void): () => void }
@@ -121,7 +126,7 @@ export function rendreJeu(
     return h('button', {
       type: 'button', class: 'discret', 'data-test': 'retour',
       onclick: () => { quitter(); ctx.naviguer({ nom: 'parcours' }) },
-    }, 'Retour')
+    }, icone('retour', 22), 'Retour')
   }
 
   function dessiner(): void {
@@ -130,7 +135,6 @@ export function rendreJeu(
       h('p', { class: 'joueur', 'data-test': 'joueur' },
         h('span', { class: 'pastille-couleur', style: `background: ${COULEURS[actif.couleur]}` }), actif.prenom),
       h('p', { class: 'objectif' }, `Objectif : moins de ${formaterObjectif(s.cibleMs).replace(/ s$/, ' secondes')} par calcul`),
-      boutonRetour(),
     )
     calculEl.textContent = formaterCalcul(calculCourant(s))
     const enfants: Node[] = []
@@ -209,7 +213,10 @@ export function rendreJeu(
     ))
   }
 
-  racine.append(entete, calculEl, reponseEl, pave.element)
+  const personnage = MASCOTTES[decomposerParcours(parcours).op]
+  const barre = h('div', { class: 'barre' }, boutonRetour(),
+    h('span', { class: 'mascotte', 'data-test': 'mascotte', 'data-personnage': personnage }, illustration(personnage, 52)))
+  racine.append(barre, entete, calculEl, reponseEl, pave.element)
   dessiner()
   return { element: racine, session: () => s, detruire: quitter }
 }
