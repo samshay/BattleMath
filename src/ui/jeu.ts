@@ -3,7 +3,7 @@ import type { Rng } from '../core/rng'
 import { cleUnicite, genererRemplacement, genererSerie } from '../core/serie'
 import { niveau } from '../core/levels'
 import { cibleEffective } from '../core/validation'
-import { etatNiveau } from '../core/progression'
+import { etatNiveau, record } from '../core/progression'
 import { formaterCalcul, formaterSecondes } from '../core/format'
 import { reponseAttendue } from '../core/faits'
 import type { ParcoursId } from '../core/types'
@@ -42,6 +42,16 @@ const visibiliteParDefaut: Visibilite = {
 
 function formaterObjectif(ms: number): string {
   return ms % 1000 === 0 ? `${ms / 1000} s` : formaterSecondes(ms)
+}
+
+function rendreRecord(ancien: number | null, nouveau: number | null): HTMLElement[] {
+  if (nouveau === null) return []
+  if (ancien === null) return [h('p', { class: 'record', 'data-test': 'record' }, `Premier record : ${formaterSecondes(nouveau)}`)]
+  if (nouveau < ancien) {
+    return [h('p', { class: 'record record-battu', 'data-test': 'record' },
+      h('span', { class: 'etincelles' }, '✨'), ` Nouveau record ! ${formaterSecondes(nouveau)} (avant : ${formaterSecondes(ancien)})`)]
+  }
+  return [h('p', { class: 'record discret', 'data-test': 'record' }, `Record : ${formaterSecondes(ancien)}`)]
 }
 
 export function rendreJeu(
@@ -168,6 +178,7 @@ export function rendreJeu(
 
   function terminer(): void {
     quitter()
+    const seriesAvant = profilActif(ctx.donnees).series
     const serie = versSerie(s, new Date().toISOString())
     const donnees = enregistrerSerie(ctx.donnees, serie, majFaits(s))
     const enregistre = ctx.sauver(donnees)
@@ -176,11 +187,13 @@ export function rendreJeu(
       : b.raison === 'trop_lent'
         ? `Bravo, presque ! Un peu plus vite la prochaine fois (objectif ${formaterObjectif(s.cibleMs)}, toi ${formaterSecondes(b.tempsMedian)}).`
         : 'Il faut 9 bonnes réponses. Encore un essai ?'
+    const ligneRecord = b.reussie ? rendreRecord(record(seriesAvant, parcours, n), record(profilActif(donnees).series, parcours, n)) : []
     const suivantOuvert = n < 8 && etatNiveau(profilActif(donnees).series, parcours, n + 1) !== 'verrouille'
     racine.replaceChildren(h('div', { class: 'fin' },
       h('p', { class: 'score' }, `${b.bonnes} sur 10`),
       h('p', { class: 'temps' }, `Ton temps : ${formaterSecondes(b.tempsMedian)} par calcul (objectif ${formaterObjectif(s.cibleMs)})`),
       h('p', { class: `verdict ${b.raison}` }, verdict),
+      ...ligneRecord,
       ...(enregistre ? [] : [h('p', { class: 'avertissement', 'data-test': 'non-enregistre' }, MSG_NON_ENREGISTRE)]),
       h('button', {
         type: 'button', class: 'principal', 'data-test': 'rejouer',

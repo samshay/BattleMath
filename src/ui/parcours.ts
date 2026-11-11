@@ -1,9 +1,9 @@
 import { decomposerParcours, parcoursId } from '../core/types'
-import type { ParcoursOp, Taille } from '../core/types'
-import { etatsParcours, parcoursVisibles, prochainNiveau, totalEtoiles } from '../core/progression'
+import type { ParcoursId, ParcoursOp, Taille } from '../core/types'
+import { etatsParcours, parcoursVisibles, prochainNiveau, record, totalEtoiles } from '../core/progression'
 import { COULEURS, profilActif } from '../storage/schema'
 import type { Profil } from '../storage/schema'
-import { nomParcours } from '../core/format'
+import { formaterSecondes, nomParcours } from '../core/format'
 import { h } from './dom'
 import type { ContexteApp } from './accueil'
 
@@ -14,6 +14,11 @@ const ETOILES = { verrouille: '', ouvert: '', reussi: '★', valide: '★★' }
 export function selectionDepuisProfil(p: Profil): { op: ParcoursOp; taille: Taille } {
   const s = p.dernierParcours ? decomposerParcours(p.dernierParcours) : { op: 'add' as const, taille: 1 as const }
   return s.taille === 3 && !p.reglages.parcoursAvances ? { op: s.op, taille: 1 } : s
+}
+
+function recordNiveau(series: Profil['series'], parcours: ParcoursId, n: number): HTMLElement[] {
+  const r = record(series, parcours, n)
+  return r === null ? [] : [h('span', { class: 'record', 'data-test': `record-${n}` }, `Record ${formaterSecondes(r)}`)]
 }
 
 export function rendreParcours(ctx: ContexteApp): HTMLElement {
@@ -60,7 +65,8 @@ export function rendreParcours(ctx: ContexteApp): HTMLElement {
         type: 'button', class: 'niveau', 'data-niveau': String(i + 1), 'data-etat': etat,
         disabled: String(etat === 'verrouille'),
         onclick: () => ctx.naviguer({ nom: 'jeu', parcours, niveau: i + 1 }),
-      }, `Niveau ${i + 1}`, ...(ETOILES[etat] ? [h('span', { class: 'marque' }, ETOILES[etat])] : [])))))
+      }, `Niveau ${i + 1}`, ...(ETOILES[etat] ? [h('span', { class: 'marque' }, ETOILES[etat])] : []),
+      ...recordNiveau(donnees.series, parcours, i + 1)))))
 
     racine.replaceChildren(...enfants)
   }

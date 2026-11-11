@@ -111,4 +111,19 @@ describe('rendreParcours et ctx.selection', () => {
     rendreParcours(ctx)
     expect(ctx.selection).toEqual({ op: 'mul', taille: 2 })
   })
+
+  it('record : « Record 4,2 s » sur le bon niveau seulement', () => {
+    const d = avecProfil({ series: [{ ...serieValidee('add-1', 1), tempsMedian: 4200 }] })
+    const racine = rendreParcours(ctxDe(d))
+    const r = racine.querySelector('button.niveau[data-niveau="1"] span.record')!
+    expect(r.textContent).toBe('Record 4,2 s')
+    expect(racine.querySelector('[data-test="record-1"]')).toBe(r)
+    expect(racine.querySelector('[data-test="record-2"]')).toBeNull()
+    expect(racine.querySelectorAll('span.record')).toHaveLength(1)
+  })
+
+  it('record : absent si la série n\'est pas réussie', () => {
+    const d = avecProfil({ series: [{ ...serieValidee('add-1', 1), bonnes: 5, reussie: false, validee: false }] })
+    expect(rendreParcours(ctxDe(d)).querySelector('span.record')).toBeNull()
+  })
 })
