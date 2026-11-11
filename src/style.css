@@ -68,7 +68,8 @@ button:disabled { opacity: 0.4; }
 .grille { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 .niveau { font-size: 1rem; padding: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .marque { font-size: 1rem; color: var(--primaire); }
-.parents { display: flex; align-items: center; justify-content: center; min-height: 56px; padding: 0 16px; color: var(--primaire); }
+.reglages { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 50%; border: 2px solid var(--bord); color: var(--texte); background: var(--surface); opacity: 0.85; }
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .avertissement { margin: 0; padding: 12px; border-radius: 12px; border: 2px solid var(--erreur); color: var(--erreur); }
 .banniere { padding: 12px; border-radius: 12px; background: var(--surface); border: 2px solid var(--bord); }
 .banniere p { margin: 0 0 8px; }

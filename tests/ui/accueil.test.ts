@@ -29,8 +29,17 @@ describe('rendreAccueil (page 1)', () => {
     expect(racine.querySelectorAll('button.profil')).toHaveLength(2)
     expect(racine.querySelector('.profils')!.classList.contains('grand')).toBe(true)
     expect(racine.querySelector('a[href="#/parents"]')).not.toBeNull()
+    expect(racine.querySelector('a.parents')).toBeNull()
     expect(racine.querySelector('button.niveau')).toBeNull()
     expect(racine.querySelector('.avertissement')).toBeNull()
+  })
+
+  it('bouton réglages : lien accessible vers l\'espace parents, dans l\'en-tête', () => {
+    const lien = rendreAccueil(ctxDe()).querySelector('header a[href="#/parents"]')!
+    expect(lien.classList.contains('reglages')).toBe(true)
+    expect(lien.getAttribute('aria-label')).toBe('Espace parents')
+    expect(lien.querySelector('svg[aria-hidden="true"]')).not.toBeNull()
+    expect(lien.querySelector('.sr-only')!.textContent).toBe('Parents')
   })
 
   it('un seul profil : la page est quand même affichée', () => {
