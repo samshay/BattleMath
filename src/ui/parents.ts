@@ -55,8 +55,14 @@ export function rendreParents(ctx: ContexteApp, deps: DepsParents): HTMLElement 
   let echecs = 0
   let messageGate = ''
   let message = ''
+  let cibleMessage: 'reglages' | 'profils' = 'reglages'
   let parcours: ParcoursId | null = null
   let consulteId = ctx.donnees.profilActif
+
+  function dire(texte: string, cible: 'reglages' | 'profils'): void {
+    message = texte
+    cibleMessage = cible
+  }
 
   function consulte(): Profil {
     const p = profilParId(ctx.donnees, consulteId)
@@ -117,7 +123,7 @@ export function rendreParents(ctx: ContexteApp, deps: DepsParents): HTMLElement 
   }
 
   function sauverReglages(r: Partial<Reglages>): void {
-    message = ''
+    dire('', 'reglages')
     ctx.sauver(majProfil(ctx.donnees, consulteId, { reglages: { ...consulte().reglages, ...r } }))
     dessiner()
   }
@@ -139,47 +145,52 @@ export function rendreParents(ctx: ContexteApp, deps: DepsParents): HTMLElement 
 
   async function importerFichier(fichier: File): Promise<void> {
     let texte: string
-    try { texte = await fichier.text() } catch { message = 'Fichier illisible'; dessiner(); return }
+    try { texte = await fichier.text() } catch { dire('Fichier illisible', 'reglages'); dessiner(); return }
     const r = importerJson(texte)
-    if (!r.ok) { message = ERREURS_IMPORT[r.erreur]; dessiner(); return }
-    if (!deps.confirmer('Remplacer tous les progrès par ce fichier ?')) return
+    if (!r.ok) { dire(ERREURS_IMPORT[r.erreur], 'reglages'); dessiner(); return }
+    const n = ctx.donnees.profils.length
+    const m = r.donnees.profils.length
+    const prenoms = r.donnees.profils.map((p) => p.prenom).join(', ')
+    const actuels = n === 1 ? 'le profil actuel et toute sa progression' : `les ${n} profils actuels et toute leur progression`
+    if (!deps.confirmer(`Remplacer ${actuels} par ce fichier (${m} profil(s) : ${prenoms}) ? Cette action est définitive.`)) return
     ctx.sauver(r.donnees)
     consulteId = ctx.donnees.profilActif
-    message = 'Progrès importés'
+    parcours = null
+    dire('Progrès importés', 'reglages')
     dessiner()
   }
 
   function ligneProfil(p: Profil): HTMLElement {
     const champ = h('input', {
-      type: 'text', maxlength: '12', 'data-test': `prenom-${p.id}`, 'aria-label': `Prénom de ${p.prenom}`,
+      type: 'text', maxlength: '12', autocapitalize: 'words', autocomplete: 'off', enterkeyhint: 'done', 'data-test': `prenom-${p.id}`, 'aria-label': `Prénom de ${p.prenom}`,
       onchange: () => {
         const v = champ.value
         if (!prenomValide(v)) {
-          champ.value = profilParId(ctx.donnees, p.id)?.prenom ?? p.prenom
-          message = 'Le prénom doit faire 1 à 12 caractères'
+          dire('Le prénom doit faire 1 à 12 caractères', 'profils')
           dessiner()
           return
         }
-        message = ''
+        dire('', 'profils')
         ctx.sauver(majProfil(ctx.donnees, p.id, { prenom: v }))
         dessiner()
       },
     })
     champ.value = p.prenom
     const couleurs = (Object.keys(COULEURS) as Couleur[]).map((c) => h('button', {
-      type: 'button', class: c === p.couleur ? 'couleur actif' : 'couleur', 'data-couleur': c, 'aria-label': c,
+      type: 'button', class: c === p.couleur ? 'couleur actif' : 'couleur', 'data-couleur': c, 'aria-label': c, 'aria-pressed': String(c === p.couleur),
       style: `background: ${COULEURS[c]}`,
-      onclick: () => { message = ''; ctx.sauver(majProfil(ctx.donnees, p.id, { couleur: c })); dessiner() },
+      onclick: () => { dire('', 'profils'); ctx.sauver(majProfil(ctx.donnees, p.id, { couleur: c })); dessiner() },
     }))
     return h('div', { class: 'ligne-profil', 'data-id': p.id },
       champ,
       h('div', { class: 'couleurs' }, ...couleurs),
       h('button', {
-        type: 'button', 'data-test': `supprimer-${p.id}`, disabled: String(ctx.donnees.profils.length === 1),
+        type: 'button', class: 'danger', 'data-test': `supprimer-${p.id}`, disabled: String(ctx.donnees.profils.length === 1),
         onclick: () => {
           if (!deps.confirmer(`Supprimer le profil ${p.prenom} et toute sa progression ?`)) return
           ctx.sauver(supprimerProfil(ctx.donnees, p.id))
-          message = ''
+          if (p.id === consulteId) parcours = null
+          dire('', 'profils')
           dessiner()
         },
       }, 'Supprimer'))
@@ -201,7 +212,7 @@ export function rendreParents(ctx: ContexteApp, deps: DepsParents): HTMLElement 
 
     const select = h('select', {
       'data-test': 'parcours', 'aria-label': 'Parcours',
-      onchange: (e) => { parcours = (e.target as HTMLSelectElement).value as ParcoursId; message = ''; dessiner() },
+      onchange: (e) => { parcours = (e.target as HTMLSelectElement).value as ParcoursId; dire('', 'reglages'); dessiner() },
     }, ...choix.map((p) => h('option', { value: p }, nomParcours(p))))
     select.value = courant
 
@@ -225,7 +236,7 @@ export function rendreParents(ctx: ContexteApp, deps: DepsParents): HTMLElement 
     racine.replaceChildren(
       h('a', { href: '#/' }, 'Retour'),
       h('h1', {}, 'Espace parents'),
-      rangeeProfils(ctx.donnees.profils, consulteId, (id) => { consulteId = id; parcours = null; message = ''; dessiner() }),
+      rangeeProfils(ctx.donnees.profils, consulteId, (id) => { consulteId = id; parcours = null; dire('', 'reglages'); dessiner() }),
       ...(ctx.avertissement ? [h('p', { class: 'avertissement', 'data-test': 'avertissement' }, ctx.avertissement === 'stockage_indisponible' ? MSG_NON_ENREGISTRE : AVERTISSEMENTS[ctx.avertissement])] : []),
       h('h2', {}, 'Progression'),
       select,
@@ -252,29 +263,32 @@ export function rendreParents(ctx: ContexteApp, deps: DepsParents): HTMLElement 
         onclick: () => {
           if (!deps.confirmer(`Effacer toute la progression de ${donnees.prenom} ? Cette action est définitive.`)) return
           ctx.sauver(reinitialiserProfil(ctx.donnees, consulteId))
-          message = 'Progression effacée'
+          dire('Progression effacée', 'reglages')
           dessiner()
         },
       }, `Effacer la progression de ${donnees.prenom}`),
+      h('p', { class: 'message', 'data-test': 'message-reglages' }, cibleMessage === 'reglages' ? message : ''),
       h('h2', {}, 'Profils'),
       ...ctx.donnees.profils.map(ligneProfil),
       h('button', {
         type: 'button', 'data-test': 'ajouter-profil', disabled: String(ctx.donnees.profils.length >= MAX_PROFILS),
-        onclick: () => { ctx.sauver(ajouterProfil(ctx.donnees)); message = ''; dessiner() },
+        onclick: () => { ctx.sauver(ajouterProfil(ctx.donnees)); dire('', 'profils'); dessiner() },
       }, 'Ajouter un profil'),
       h('button', {
         type: 'button', class: 'danger', 'data-test': 'reset-tout',
         onclick: () => {
           if (!deps.confirmer('Effacer tous les profils et toute la progression ? Cette action est définitive.')) return
           ctx.sauver(donneesVides())
-          consulteId = 'p1'
+          consulteId = ctx.donnees.profilActif
           parcours = null
-          message = 'Progression effacée'
+          dire('Progression effacée', 'profils')
           dessiner()
         },
       }, 'Tout effacer'),
-      h('p', { class: 'message' }, message),
+      h('p', { class: 'message', 'data-test': 'message-profils' }, cibleMessage === 'profils' ? message : ''),
     )
+    const el = racine.querySelector<HTMLElement>(`[data-test="message-${cibleMessage}"]`)
+    if (el && message !== '' && typeof el.scrollIntoView === 'function') el.scrollIntoView({ block: 'nearest' })
   }
 
   dessiner()

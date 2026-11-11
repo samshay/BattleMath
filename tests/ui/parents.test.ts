@@ -156,7 +156,9 @@ describe('rendreParents', () => {
   it('import invalide -> message, pas de sauver', async () => {
     const p = monter()
     await importer(p, 'pas du json')
-    expect(p.q('.message')!.textContent).toBe('Fichier illisible')
+    expect(p.q('[data-test="message-reglages"]')!.textContent).toBe('Fichier illisible')
+    expect(p.q('[data-test="message-reglages"]')!.previousElementSibling!.getAttribute('data-test')).toBe('reset-profil')
+    expect(p.q('[data-test="message-profils"]')!.textContent).toBe('')
     expect(p.ctx.sauver).not.toHaveBeenCalled()
   })
 
@@ -164,9 +166,15 @@ describe('rendreParents', () => {
     const p = monter()
     const d = avecProfil({ reglages: { parcoursAvances: false, vitesse: 'rapide' } })
     await importer(p, JSON.stringify(d))
-    expect(p.confirmer).toHaveBeenCalledWith('Remplacer tous les progrès par ce fichier ?')
+    expect(p.confirmer).toHaveBeenCalledWith('Remplacer le profil actuel et toute sa progression par ce fichier (1 profil(s) : Enfant) ? Cette action est définitive.')
     expect(p.ctx.sauver).toHaveBeenCalledWith(d)
-    expect(p.q('.message')!.textContent).toBe('Progrès importés')
+    expect(p.q('[data-test="message-reglages"]')!.textContent).toBe('Progrès importés')
+  })
+
+  it('import : libellé pluriel avec les prénoms du fichier', async () => {
+    const p = monter({ donnees: deuxProfils() })
+    await importer(p, JSON.stringify(deuxProfils()))
+    expect(p.confirmer).toHaveBeenCalledWith('Remplacer les 2 profils actuels et toute leur progression par ce fichier (2 profil(s) : Enfant, Joueur 2) ? Cette action est définitive.')
   })
 
   it('reset-tout + confirmer false -> rien ; true -> données vides', () => {
@@ -237,7 +245,8 @@ describe('rendreParents', () => {
       change(p.q<HTMLInputElement>('[data-test="prenom-p2"]')!, '   ')
       expect(p.ctx.sauver).not.toHaveBeenCalled()
       expect(p.q<HTMLInputElement>('[data-test="prenom-p2"]')!.value).toBe('Joueur 2')
-      expect(p.q('.message')!.textContent).toBe('Le prénom doit faire 1 à 12 caractères')
+      expect(p.q('[data-test="message-profils"]')!.textContent).toBe('Le prénom doit faire 1 à 12 caractères')
+      expect(p.q('[data-test="message-reglages"]')!.textContent).toBe('')
     })
 
     it('couleur -> sauver, .actif suit', () => {
@@ -271,6 +280,55 @@ describe('rendreParents', () => {
       expect(p.ctx.donnees.profils).toHaveLength(1)
       expect(p.q('.profils button.actif')!.getAttribute('data-id')).toBe('p2')
       expect(p.q<HTMLButtonElement>('[data-test="supprimer-p2"]')!.disabled).toBe(true)
+    })
+
+    it('clic pastille : le select est sur le dernier parcours du profil consulté', () => {
+      const d = deuxProfils({ series: [serie('add-1', 4)] }, { series: [serie('mul-1', 7)], dernierParcours: 'mul-1' })
+      const p = monter({ donnees: d })
+      p.q<HTMLElement>('.profils button[data-id="p2"]')!.click()
+      expect(p.q<HTMLSelectElement>('select[data-test="parcours"]')!.value).toBe('mul-1')
+    })
+
+    it('supprimer le profil consulté non actif : le consulté retombe sur l\'actif', () => {
+      const p = monter({ donnees: deux('p1'), confirme: true })
+      p.q<HTMLElement>('.profils button[data-id="p2"]')!.click()
+      p.q('[data-test="supprimer-p2"]')!.click()
+      expect(p.ctx.donnees.profils).toHaveLength(1)
+      expect(p.q('.profils button.actif')!.getAttribute('data-id')).toBe('p1')
+      expect(p.el.querySelector('tbody')!.textContent).toContain('4')
+    })
+
+    it('supprimer un profil non consulté : le consulté reste', () => {
+      const p = monter({ donnees: deux('p1'), confirme: true })
+      p.q<HTMLElement>('.profils button[data-id="p2"]')!.click()
+      p.q('[data-test="supprimer-p1"]')!.click()
+      expect(p.q('.profils button.actif')!.getAttribute('data-id')).toBe('p2')
+      expect(p.el.querySelector('tbody')!.textContent).toContain('7')
+    })
+
+    it('profil consulté avec série seedée : reset-profil vide ses séries', () => {
+      const d = deuxProfils({}, { series: [serie('mul-1', 7)], dernierParcours: 'mul-1' }, 'p2')
+      const p = monter({ donnees: d, confirme: true })
+      p.q('[data-test="reset-profil"]')!.click()
+      expect(p.ctx.donnees.profils[1]!.series).toEqual([])
+      expect(p.ctx.donnees.profils[1]!.dernierParcours).toBeNull()
+      expect(p.ctx.donnees.profils[0]!.series).toEqual([])
+      expect(p.q('[data-test="message-reglages"]')!.textContent).toBe('Progression effacée')
+    })
+
+    it('sauver renvoie false lors d\'un renommage : avertissement visible', () => {
+      const p = monter({ donnees: deux() })
+      vi.mocked(p.ctx.sauver).mockImplementation((d: Donnees) => { p.ctx.donnees = d; p.ctx.avertissement = 'stockage_indisponible'; return false })
+      change(p.q<HTMLInputElement>('[data-test="prenom-p2"]')!, 'Léa')
+      expect(p.q('[data-test="avertissement"]')!.textContent).toContain("n'a pas pu être enregistrée")
+    })
+
+    it('boutons couleur et supprimer : aria-pressed, classe danger', () => {
+      const p = monter({ donnees: deux() })
+      const actif = p.q('.ligne-profil[data-id="p2"] button.couleur.actif')!
+      expect(actif.getAttribute('aria-pressed')).toBe('true')
+      expect(p.q('.ligne-profil[data-id="p2"] button.couleur:not(.actif)')!.getAttribute('aria-pressed')).toBe('false')
+      expect(p.q('[data-test="supprimer-p2"]')!.classList.contains('danger')).toBe(true)
     })
 
     it('supprimer + confirmer false : rien', () => {
