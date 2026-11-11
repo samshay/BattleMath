@@ -22,4 +22,20 @@ describe('icone', () => {
     expect(el.classList.contains('illustration-boss-mix')).toBe(true)
     expect(el.querySelector('svg')!.getAttribute('height')).toBe('52')
   })
+  it.each(['continuer', 'correct', 'effacer', 'erreur', 'etincelle', 'etoile-vide', 'etoile', 'joueur', 'op-add', 'op-sub', 'op-mul', 'op-mix', 'parents', 'record', 'retour', 'verrou'] as const)(
+    'icône %s : svg avec viewBox',
+    (nom) => {
+      const svg = icone(nom).querySelector('svg')
+      expect(svg).not.toBeNull()
+      expect(svg!.hasAttribute('viewBox')).toBe(true)
+    },
+  )
+  it.each(['vaisseau', 'pilote', 'alien-add', 'alien-sub', 'alien-mul', 'boss-mix', 'eclat', 'planete'] as const)(
+    'illustration %s : svg avec viewBox',
+    (nom) => {
+      const svg = illustration(nom, 24).querySelector('svg')
+      expect(svg).not.toBeNull()
+      expect(svg!.hasAttribute('viewBox')).toBe(true)
+    },
+  )
 })

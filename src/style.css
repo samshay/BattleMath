@@ -1,4 +1,5 @@
 :root {
+  color-scheme: dark;
   --fond: #0B1026;
   --texte: #EEF1FF;
   --primaire: #4FD8EB;
@@ -61,15 +62,14 @@ button:active:not(:disabled) { transform: scale(0.96); filter: brightness(1.15);
 .profils.grand .pastille-couleur { width: 32px; height: 32px; }
 .accueil h2 { margin: 0; font-size: 1.75rem; }
 .decor { display: flex; justify-content: space-between; align-items: center; min-height: 160px; padding: 0 8px; background-image: radial-gradient(circle, var(--texte) 1.5px, transparent 2px), radial-gradient(circle, var(--texte) 1px, transparent 1.5px); background-size: 120px 90px, 70px 110px; background-position: 10px 10px, 40px 50px; }
-.accueil .joueur { color: var(--texte); display: flex; align-items: center; gap: 8px; font-size: 1.25rem; font-weight: bold; }
+.accueil .joueur { color: var(--texte); display: flex; align-items: center; gap: 8px; font-size: 1.25rem; font-weight: bold; min-width: 0; }
 .accueil .joueur .pastille-couleur { width: 24px; height: 24px; }
-.accueil .joueur { min-width: 0; }
 .accueil .joueur .prenom { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.accueil .changer { display: flex; align-items: center; gap: 8px; min-height: 44px; font-weight: 800; color: var(--primaire); }
+.accueil .changer { display: flex; align-items: center; gap: 8px; min-height: 56px; text-decoration: none; font-weight: 800; color: var(--primaire); }
 .profils { display: flex; flex-wrap: wrap; gap: 8px; }
 .profil { border-width: 3px; border-color: var(--bord); min-height: 56px; display: flex; align-items: center; gap: 8px; flex: 0 0 auto; white-space: nowrap; }
 .pastille-couleur { width: 24px; height: 24px; border-radius: 50%; flex: 0 0 auto; }
-.profil.actif { background: transparent; color: inherit; border: 3px solid var(--primaire); font-weight: bold; }
+.profil.actif { color: inherit; border: 3px solid var(--primaire); font-weight: bold; }
 .choix { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
 .choix.tailles { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 1fr; }
 .op { min-height: 64px; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; font-weight: 800; padding: 0 12px; text-align: left; }
@@ -89,7 +89,7 @@ button:active:not(:disabled) { transform: scale(0.96); filter: brightness(1.15);
 .continuer .titre { font-size: 1.375rem; }
 .continuer .detail { font-size: 0.875rem; font-weight: 800; }
 .grille { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
-.niveau { aspect-ratio: 1 / 1.05; min-height: 84px; padding: 0; gap: 3px; border-radius: var(--rayon); font-size: 1rem; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.niveau { aspect-ratio: 1 / 1.05; padding: 0; gap: 3px; border-radius: var(--rayon); font-size: 1rem; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .niveau .numero { font-size: 1.5rem; line-height: 1; }
 .niveau[data-etat="verrouille"] { background: var(--fond); color: var(--texte-doux); opacity: 1; }
 .niveau[data-etat="verrouille"] .numero { font-size: 0.95rem; }
@@ -127,7 +127,7 @@ button.discret { display: inline-flex; align-items: center; gap: 8px; min-height
 .touche.large { grid-column: span 2; }
 .touche.pleine { grid-column: 1 / -1; }
 .fin { display: flex; flex-direction: column; gap: 12px; align-items: center; text-align: center; }
-.decor-fin { min-height: 130px; justify-content: center; gap: 12px; position: relative; }
+.decor-fin { align-self: stretch; min-height: 130px; justify-content: center; gap: 12px; position: relative; }
 .decor-fin .eclat { position: absolute; right: 10%; top: 0; }
 .score { margin: 0; font-size: 4rem; line-height: 1; font-weight: bold; }
 .verdict { margin: 0; font-size: 1.75rem; font-family: var(--police-titre); font-weight: 600; }
@@ -136,7 +136,8 @@ button.discret { display: inline-flex; align-items: center; gap: 8px; min-height
 .temps { margin: 0; font-size: 1.06rem; }
 .temps-total { margin: 0; color: var(--texte-doux); }
 .fin .record.record-battu { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: var(--rayon); background: var(--surface); border: 1.5px solid var(--succes); text-align: left; }
-.fin .actions { display: flex; flex-direction: column; gap: 12px; width: 100%; margin-top: auto; }
+.fin .actions { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+.fin .actions .discret { justify-content: center; }
 .principal, .secondaire { min-height: 64px; border-radius: 22px; font-size: 1.375rem; font-weight: 700; }
 .principal { background: var(--primaire); border-color: var(--primaire); color: var(--sur-accent); }
 .secondaire { background: var(--surface); border: 1.5px solid var(--bord); color: var(--texte); }
@@ -173,7 +174,6 @@ button.discret { display: inline-flex; align-items: center; gap: 8px; min-height
 .niveau .record { font-size: 0.75rem; white-space: nowrap; color: var(--texte-doux); }
 .fin .record { margin: 0; }
 .fin .record.discret { font-size: 0.9rem; color: var(--texte-doux); }
-.record-battu { color: var(--succes); font-weight: bold; display: inline-block; }
 .etincelles { display: inline-block; }
 @media (prefers-reduced-motion: no-preference) {
   .record-battu { animation: record-pulse 1.2s ease-in-out 1; }
@@ -186,3 +186,5 @@ button.discret { display: inline-flex; align-items: center; gap: 8px; min-height
 /* Icônes */
 .icone, .illustration { display: inline-flex; flex: 0 0 auto; line-height: 0; }
 .icone svg { display: block; }
+.decor-accueil .illustration { flex: 0 1 auto; min-width: 0; }
+.decor-accueil .illustration svg { max-width: 100%; height: auto; }
