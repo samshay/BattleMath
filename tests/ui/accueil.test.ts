@@ -23,6 +23,18 @@ beforeEach(() => {
 })
 
 describe('rendreAccueil (page 1)', () => {
+  it('bouton Parents : icône parents.svg, plus d\'engrenage', () => {
+    const lien = rendreAccueil(ctxDe()).querySelector('header a[href="#/parents"]')!
+    expect(lien.querySelector('.icone-parents svg')).not.toBeNull()
+  })
+  it('décor spatial entre l\'en-tête et « Qui joue ? », masqué aux lecteurs d\'écran', () => {
+    const racine = rendreAccueil(ctxDe())
+    const decor = racine.querySelector('.decor-accueil')!
+    expect(decor.getAttribute('aria-hidden')).toBe('true')
+    expect(decor.previousElementSibling!.tagName).toBe('HEADER')
+    expect(decor.nextElementSibling!.tagName).toBe('H2')
+    expect(decor.querySelectorAll('.illustration')).toHaveLength(3)
+  })
   it('« Qui joue ? », une pastille par profil, lien Parents, pas de grille', () => {
     const racine = rendreAccueil(ctxDe(deuxProfils()))
     expect(racine.querySelector('h2')!.textContent).toBe('Qui joue ?')
@@ -38,7 +50,7 @@ describe('rendreAccueil (page 1)', () => {
     const lien = rendreAccueil(ctxDe()).querySelector('header a[href="#/parents"]')!
     expect(lien.classList.contains('reglages')).toBe(true)
     expect(lien.getAttribute('aria-label')).toBe('Espace parents')
-    expect(lien.querySelector('svg[aria-hidden="true"]')).not.toBeNull()
+    expect(lien.querySelector('[aria-hidden="true"] svg')).not.toBeNull()
     expect(lien.querySelector('.sr-only')!.textContent).toBe('Parents')
   })
 

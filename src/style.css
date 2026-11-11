@@ -53,18 +53,20 @@ button:disabled { opacity: 0.4; }
 /* Accueil */
 .accueil { display: flex; flex-direction: column; gap: 16px; }
 .accueil header { display: flex; justify-content: space-between; align-items: center; }
-.accueil h1 { margin: 0; font-size: 1.75rem; }
+.accueil h1 { margin: 0; font-size: 2.125rem; }
 .etoiles { font-size: 1.5rem; color: var(--primaire); }
 .profils.grand { flex-direction: column; }
-.profils.grand .profil { width: 100%; min-height: 64px; font-size: 1.5rem; }
-.accueil h2 { margin: 0; font-size: 1.25rem; }
+.profils.grand .profil { width: 100%; min-height: 72px; border-radius: var(--rayon-grand); font-size: 1.5rem; padding: 0 20px; gap: 14px; }
+.profils.grand .pastille-couleur { width: 32px; height: 32px; }
+.accueil h2 { margin: 0; font-size: 1.75rem; }
+.decor { display: flex; justify-content: space-between; align-items: center; min-height: 160px; padding: 0 8px; background-image: radial-gradient(circle, var(--texte) 1.5px, transparent 2px), radial-gradient(circle, var(--texte) 1px, transparent 1.5px); background-size: 120px 90px, 70px 110px; background-position: 10px 10px, 40px 50px; }
 .accueil .joueur { color: var(--texte); display: flex; align-items: center; gap: 8px; font-size: 1.25rem; font-weight: bold; }
 .accueil .joueur .pastille-couleur { width: 24px; height: 24px; }
 .accueil .changer { display: flex; align-items: center; min-height: 56px; color: var(--primaire); }
 .profils { display: flex; flex-wrap: wrap; gap: 8px; }
 .profil { border-width: 3px; border-color: var(--bord); min-height: 56px; display: flex; align-items: center; gap: 8px; flex: 0 0 auto; white-space: nowrap; }
 .pastille-couleur { width: 24px; height: 24px; border-radius: 50%; flex: 0 0 auto; }
-.profil.actif { background: transparent; color: inherit; border-color: var(--primaire); font-weight: bold; }
+.profil.actif { background: transparent; color: inherit; border: 3px solid var(--primaire); font-weight: bold; }
 .choix { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 .choix.tailles { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 1fr; }
 .actif { background: var(--surface); border: 3px solid var(--primaire); color: var(--texte); }
