@@ -306,6 +306,39 @@ describe('rendreJeu', () => {
     expect(j.q('[data-test="suivant"]')).toBeNull()
   })
 
+  it('fin validée : décor, deux étoiles, éclat, Niveau suivant principal avant Rejouer secondaire', () => {
+    const j = monter()
+    for (let i = 0; i < 10; i++) j.repondreJuste()
+    const fin = j.q('.fin')!
+    expect(fin.firstElementChild!.classList.contains('decor-fin')).toBe(true)
+    expect(fin.querySelector('.decor-fin .illustration-vaisseau')).not.toBeNull()
+    expect(fin.querySelector('.decor-fin .illustration-eclat')).not.toBeNull()
+    expect(fin.querySelectorAll('.etoiles-fin .icone-etoile')).toHaveLength(2)
+    expect(fin.querySelector('.etoiles-fin')!.getAttribute('aria-label')).toBe('deux étoiles')
+    const suivant = j.q('[data-test="suivant"]')!, rejouer = j.q('[data-test="rejouer"]')!
+    expect(suivant.classList.contains('principal')).toBe(true)
+    expect(rejouer.classList.contains('secondaire')).toBe(true)
+    expect(rejouer.classList.contains('principal')).toBe(false)
+    expect(suivant.compareDocumentPosition(rejouer) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('fin réussie mais trop lente : une étoile, pas d\'éclat, Rejouer principal', () => {
+    const j = monter({ pas: 20000 })
+    for (let i = 0; i < 10; i++) j.repondreJuste()
+    expect(j.ecran.element.querySelectorAll('.etoiles-fin .icone-etoile')).toHaveLength(1)
+    expect(j.q('.etoiles-fin')!.getAttribute('aria-label')).toBe('une étoile')
+    expect(j.q('.illustration-eclat')).toBeNull()
+    expect(j.q('[data-test="rejouer"]')!.classList.contains('principal')).toBe(true)
+  })
+
+  it('fin ratée : pas d\'étoile', () => {
+    const j = monter()
+    for (let i = 0; i < 2; i++) { j.repondreFaux(); j.repondreJuste() }
+    for (let i = 0; i < 8; i++) j.repondreJuste()
+    expect(j.q('.fin')).not.toBeNull()
+    expect(j.q('.etoiles-fin')).toBeNull()
+  })
+
   it('fin trop lente : message avec les vraies valeurs', () => {
     const j = monter({ pas: 20000 })
     for (let i = 0; i < 10; i++) j.repondreJuste()
@@ -343,6 +376,8 @@ describe('rendreJeu', () => {
       expect(el.textContent).toContain('Nouveau record ! 20,0 s (avant : 51,0 s)')
       expect(el.classList.contains('record-battu')).toBe(true)
       expect(el.querySelector('.etincelles')).not.toBeNull()
+      expect(el.querySelector('.etincelles .icone-etincelle')).not.toBeNull()
+      expect(el.textContent).not.toContain('✨')
     })
 
     it('record non battu : discret', () => {

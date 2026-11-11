@@ -115,7 +115,7 @@ button:disabled { opacity: 0.4; }
 button.discret { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; font-size: 1rem; font-weight: 800; border-color: transparent; background: transparent; color: var(--texte-doux); padding: 0; }
 .calcul { font-size: 4.25rem; font-weight: 700; line-height: 1; text-align: center; margin-top: 8px; }
 .reponse { min-height: 76px; box-sizing: border-box; border-radius: 22px; background: var(--surface); border: 2px solid var(--primaire); display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: 700; gap: 8px; text-align: center; }
-.reponse.juste { border-color: var(--succes); }
+.reponse.juste { border-color: var(--succes); color: var(--succes); }
 .reponse.correction { border-color: var(--erreur); }
 .barree { text-decoration: line-through; color: var(--erreur); }
 .attendu { color: var(--texte-doux); }
@@ -124,10 +124,20 @@ button.discret { display: inline-flex; align-items: center; gap: 8px; min-height
 .touche-valider { background: var(--succes); border-color: var(--succes); color: var(--sur-accent); font-size: 1.5rem; font-weight: 700; }
 .touche.large { grid-column: span 2; }
 .touche.pleine { grid-column: 1 / -1; }
-.fin { display: flex; flex-direction: column; gap: 16px; text-align: center; }
-.score { margin: 0; font-size: 3rem; font-weight: bold; }
-.temps, .verdict { margin: 0; font-size: 1.25rem; }
-.principal { background: var(--primaire); border-color: var(--primaire); color: var(--sur-accent); font-weight: bold; }
+.fin { display: flex; flex-direction: column; gap: 12px; align-items: center; text-align: center; }
+.decor-fin { min-height: 130px; justify-content: center; gap: 12px; position: relative; }
+.decor-fin .eclat { position: absolute; right: 10%; top: 0; }
+.score { margin: 0; font-size: 4rem; line-height: 1; font-weight: bold; }
+.verdict { margin: 0; font-size: 1.75rem; font-family: var(--police-titre); font-weight: 600; }
+.verdict.validee { color: var(--succes); }
+.etoiles-fin { display: flex; gap: 8px; color: var(--etoile); }
+.temps { margin: 0; font-size: 1.06rem; }
+.temps-total { margin: 0; color: var(--texte-doux); }
+.fin .record.record-battu { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: var(--rayon); background: var(--surface); border: 1.5px solid var(--succes); text-align: left; }
+.fin .actions { display: flex; flex-direction: column; gap: 12px; width: 100%; margin-top: auto; }
+.principal, .secondaire { min-height: 64px; border-radius: 22px; font-size: 1.375rem; font-weight: 700; }
+.principal { background: var(--primaire); border-color: var(--primaire); color: var(--sur-accent); }
+.secondaire { background: var(--surface); border: 1.5px solid var(--bord); color: var(--texte); }
 
 /* Parents */
 .parents-ecran { display: flex; flex-direction: column; gap: 12px; user-select: text; -webkit-user-select: text; }
@@ -165,6 +175,7 @@ button.discret { display: inline-flex; align-items: center; gap: 8px; min-height
 @media (prefers-reduced-motion: no-preference) {
   .record-battu { animation: record-pulse 1.2s ease-in-out 1; }
   .etincelles { animation: etincelles-apparition 0.8s ease-out 1; }
+  .decor-fin .eclat { animation: etincelles-apparition 0.8s ease-out 1; }
 }
 @keyframes record-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
 @keyframes etincelles-apparition { from { opacity: 0; } to { opacity: 1; } }

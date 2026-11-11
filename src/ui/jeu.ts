@@ -54,7 +54,7 @@ function rendreRecord(ancien: number | null, nouveau: number | null): HTMLElemen
   if (ancien === null) return [h('p', { class: 'record', 'data-test': 'record' }, `Premier record : ${formaterSecondes(nouveau)}`)]
   if (nouveau < ancien) {
     return [h('p', { class: 'record record-battu', 'data-test': 'record' },
-      h('span', { class: 'etincelles', 'aria-hidden': 'true' }, '✨'), ` Nouveau record ! ${formaterSecondes(nouveau)} (avant : ${formaterSecondes(ancien)})`)]
+      h('span', { class: 'etincelles', 'aria-hidden': 'true' }, icone('etincelle', 24)), `Nouveau record ! ${formaterSecondes(nouveau)} (avant : ${formaterSecondes(ancien)})`)]
   }
   return [h('p', { class: 'record discret', 'data-test': 'record' }, `Record : ${formaterSecondes(ancien)}`)]
 }
@@ -194,22 +194,33 @@ export function rendreJeu(
     const seriesApres = profilActif(donnees).series
     const ligneRecord = b.validee ? rendreRecord(record(seriesAvant, parcours, n), record(seriesApres, parcours, n)) : []
     const suivantOuvert = n < 8 && etatNiveau(profilActif(donnees).series, parcours, n + 1) !== 'verrouille'
+    const nbEtoiles = b.validee ? 2 : b.raison === 'trop_lent' ? 1 : 0
+    const etoiles = nbEtoiles === 0 ? [] : [h('span', {
+      class: 'etoiles-fin', role: 'img', 'aria-label': nbEtoiles === 2 ? 'deux étoiles' : 'une étoile',
+    }, ...Array.from({ length: nbEtoiles }, () => icone('etoile', 44)))]
+    const boutonRejouer = h('button', {
+      type: 'button', class: suivantOuvert ? 'secondaire' : 'principal', 'data-test': 'rejouer',
+      onclick: () => ctx.naviguer({ nom: 'jeu', parcours, niveau: n }),
+    }, 'Rejouer')
+    const boutonSuivant = h('button', {
+      type: 'button', class: 'principal', 'data-test': 'suivant',
+      onclick: () => ctx.naviguer({ nom: 'jeu', parcours, niveau: n + 1 }),
+    }, 'Niveau suivant')
     racine.replaceChildren(h('div', { class: 'fin' },
+      h('div', { class: 'decor decor-fin', 'aria-hidden': 'true' },
+        illustration('vaisseau', 130),
+        ...(b.validee ? [h('span', { class: 'eclat' }, illustration('eclat', 72))] : [])),
       h('p', { class: 'score' }, `${b.bonnes} sur 10`),
+      h('p', { class: `verdict ${b.raison}` }, verdict),
+      ...etoiles,
       h('p', { class: 'temps' }, `Ton temps : ${formaterSecondes(b.tempsMedian)} par calcul (objectif ${formaterObjectif(s.cibleMs)})`),
       h('p', { class: 'temps-total', 'data-test': 'temps-total' }, `Temps de la série : ${formaterSecondes(serie.tempsTotal ?? 0)}`),
-      h('p', { class: `verdict ${b.raison}` }, verdict),
       ...ligneRecord,
       ...(enregistre ? [] : [h('p', { class: 'avertissement', 'data-test': 'non-enregistre' }, MSG_NON_ENREGISTRE)]),
-      h('button', {
-        type: 'button', class: 'principal', 'data-test': 'rejouer',
-        onclick: () => ctx.naviguer({ nom: 'jeu', parcours, niveau: n }),
-      }, 'Rejouer'),
-      ...(suivantOuvert ? [h('button', {
-        type: 'button', class: 'principal', 'data-test': 'suivant',
-        onclick: () => ctx.naviguer({ nom: 'jeu', parcours, niveau: n + 1 }),
-      }, 'Niveau suivant')] : []),
-      h('button', { type: 'button', 'data-test': 'retour', onclick: () => ctx.naviguer({ nom: 'parcours' }) }, 'Retour'),
+      h('div', { class: 'actions' },
+        ...(suivantOuvert ? [boutonSuivant] : []),
+        boutonRejouer,
+        h('button', { type: 'button', class: 'discret', 'data-test': 'retour', onclick: () => ctx.naviguer({ nom: 'parcours' }) }, 'Retour')),
     ))
   }
 
