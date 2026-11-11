@@ -5,7 +5,7 @@ import type { Verrou } from '../../src/ui/parents'
 import type { ContexteApp } from '../../src/ui/accueil'
 import { donneesVides } from '../../src/storage/schema'
 import type { Donnees } from '../../src/storage/schema'
-import { avecProfil } from '../aide/donnees'
+import { avecProfil, deuxProfils, fixtureV1 } from '../aide/donnees'
 import { exporterJson } from '../../src/storage/store'
 import { createRng } from '../../src/core/rng'
 
@@ -18,7 +18,7 @@ function donneesAvecSeries(): Donnees {
 
 function monter(opts: { ouvert?: boolean; donnees?: Donnees; confirme?: boolean; partager?: (f: File) => Promise<'ok' | 'annule' | 'echec'> } = {}) {
   const ctx: ContexteApp = {
-    donnees: opts.donnees ?? donneesAvecSeries(), avertissement: null, sauver: vi.fn(() => true), naviguer: vi.fn(), selection: { op: 'add', taille: 1 },
+    donnees: opts.donnees ?? donneesAvecSeries(), avertissement: null, sauver: vi.fn((d: Donnees) => { ctx.donnees = d; return true }), naviguer: vi.fn(), selection: { op: 'add', taille: 1 },
   }
   let ouvert = opts.ouvert ?? true
   const verrou: Verrou = { estOuvert: vi.fn(() => ouvert), ouvrir: vi.fn(() => { ouvert = true }) }
@@ -105,7 +105,7 @@ describe('rendreParents', () => {
 
   it('contenu : sections, graphiques, à revoir', () => {
     const p = monter()
-    expect([...p.el.querySelectorAll('h2')].map((h) => h.textContent)).toEqual(['Progression', 'Synthèse', 'À revoir', 'Réglages'])
+    expect([...p.el.querySelectorAll('h2')].map((h) => h.textContent)).toEqual(['Progression', 'Synthèse', 'À revoir', 'Réglages', 'Profils'])
     expect(p.el.querySelectorAll('svg')).toHaveLength(2)
     expect(p.el.textContent).toContain('Jours d\'entraînement : 1')
     expect(p.q('li')!.textContent).toBe('3 + 4 : 3 erreurs sur 5, 6,2 s en moyenne')
@@ -169,13 +169,123 @@ describe('rendreParents', () => {
     expect(p.q('.message')!.textContent).toBe('Progrès importés')
   })
 
-  it('reset + confirmer false -> rien ; true -> données vides', () => {
+  it('reset-tout + confirmer false -> rien ; true -> données vides', () => {
     const p = monter({ confirme: false })
-    p.q('[data-test="reset"]')!.click()
-    expect(p.confirmer).toHaveBeenCalledWith('Effacer toute la progression ? Cette action est définitive.')
+    p.q('[data-test="reset-tout"]')!.click()
+    expect(p.confirmer).toHaveBeenCalledWith('Effacer tous les profils et toute la progression ? Cette action est définitive.')
     expect(p.ctx.sauver).not.toHaveBeenCalled()
     const p2 = monter({ confirme: true })
-    p2.q('[data-test="reset"]')!.click()
+    p2.q('[data-test="reset-tout"]')!.click()
     expect(p2.ctx.sauver).toHaveBeenCalledWith(donneesVides())
+  })
+
+  describe('profils', () => {
+    const serie = (parcours: string, niveau: number) => ({ date: '2026-11-10T10:00:00.000Z', parcours, niveau, bonnes: 10, tempsMedian: 3000, tempsCible: 4000, reussie: true, validee: true }) as never
+    const deux = (actif = 'p1') => deuxProfils({ series: [serie('add-1', 4)] }, { series: [serie('mul-1', 7)] }, actif)
+    const change = (el: HTMLInputElement, v: string) => { el.value = v; el.dispatchEvent(new Event('change', { bubbles: true })) }
+
+    it('rangée de profils avec .actif sur le profil actif', () => {
+      const p = monter({ donnees: deux('p2') })
+      expect(p.q('.profils button.actif')!.getAttribute('data-id')).toBe('p2')
+    })
+
+    it('clic sur l\'autre profil : ses stats, profilActif inchangé, sauver non appelé', () => {
+      const p = monter({ donnees: deux() })
+      expect(p.el.querySelector('tbody')!.textContent).toContain('4')
+      p.q<HTMLElement>('.profils button[data-id="p2"]')!.click()
+      expect(p.q('.profils button.actif')!.getAttribute('data-id')).toBe('p2')
+      expect(p.el.querySelector('tbody')!.textContent).toContain('7')
+      expect(p.ctx.sauver).not.toHaveBeenCalled()
+      expect(p.ctx.donnees.profilActif).toBe('p1')
+    })
+
+    it('vitesse : sauver sur le profil consulté seulement', () => {
+      const p = monter({ donnees: deux() })
+      p.q<HTMLElement>('.profils button[data-id="p2"]')!.click()
+      const r = p.q<HTMLInputElement>('input[name="vitesse"][value="tranquille"]')!
+      r.checked = true
+      r.dispatchEvent(new Event('change', { bubbles: true }))
+      expect(p.ctx.donnees.profils[1]!.reglages.vitesse).toBe('tranquille')
+      expect(p.ctx.donnees.profils[0]!.reglages.vitesse).not.toBe('tranquille')
+    })
+
+    it('reset-profil + confirmer true : séries vides pour ce profil seulement', () => {
+      const p = monter({ donnees: deux(), confirme: true })
+      p.q<HTMLElement>('.profils button[data-id="p2"]')!.click()
+      expect(p.q('[data-test="reset-profil"]')!.textContent).toBe('Effacer la progression de Joueur 2')
+      p.q('[data-test="reset-profil"]')!.click()
+      expect(p.confirmer).toHaveBeenCalledWith('Effacer toute la progression de Joueur 2 ? Cette action est définitive.')
+      expect(p.ctx.donnees.profils[1]!.series).toEqual([])
+      expect(p.ctx.donnees.profils[0]!.series).toHaveLength(1)
+    })
+
+    it('reset-profil + confirmer false : rien', () => {
+      const p = monter({ donnees: deux(), confirme: false })
+      p.q('[data-test="reset-profil"]')!.click()
+      expect(p.ctx.sauver).not.toHaveBeenCalled()
+    })
+
+    it('prénom valide au change -> sauver', () => {
+      const p = monter({ donnees: deux() })
+      change(p.q<HTMLInputElement>('[data-test="prenom-p2"]')!, 'Léa')
+      expect(p.ctx.donnees.profils[1]!.prenom).toBe('Léa')
+      expect(p.q<HTMLInputElement>('[data-test="prenom-p2"]')!.value).toBe('Léa')
+    })
+
+    it('prénom vide : refusé, champ rétabli, message (Review Focus 4)', () => {
+      const p = monter({ donnees: deux() })
+      change(p.q<HTMLInputElement>('[data-test="prenom-p2"]')!, '   ')
+      expect(p.ctx.sauver).not.toHaveBeenCalled()
+      expect(p.q<HTMLInputElement>('[data-test="prenom-p2"]')!.value).toBe('Joueur 2')
+      expect(p.q('.message')!.textContent).toBe('Le prénom doit faire 1 à 12 caractères')
+    })
+
+    it('couleur -> sauver, .actif suit', () => {
+      const p = monter({ donnees: deux() })
+      p.q<HTMLElement>('.ligne-profil[data-id="p2"] button.couleur[data-couleur="rose"]')!.click()
+      expect(p.ctx.donnees.profils[1]!.couleur).toBe('rose')
+      expect(p.q('.ligne-profil[data-id="p2"] button.couleur.actif')!.getAttribute('data-couleur')).toBe('rose')
+      expect(p.el.querySelectorAll('.ligne-profil[data-id="p1"] button.couleur')).toHaveLength(6)
+    })
+
+    it('ajouter-profil -> 3 profils ; désactivé à 4', () => {
+      const p = monter({ donnees: deux() })
+      p.q('[data-test="ajouter-profil"]')!.click()
+      expect(p.ctx.donnees.profils).toHaveLength(3)
+      expect(p.q<HTMLButtonElement>('[data-test="ajouter-profil"]')!.disabled).toBe(false)
+      p.q('[data-test="ajouter-profil"]')!.click()
+      expect(p.ctx.donnees.profils).toHaveLength(4)
+      expect(p.q<HTMLButtonElement>('[data-test="ajouter-profil"]')!.disabled).toBe(true)
+    })
+
+    it('supprimer désactivé avec un seul profil', () => {
+      const p = monter()
+      expect(p.q<HTMLButtonElement>('[data-test="supprimer-p1"]')!.disabled).toBe(true)
+    })
+
+    it('supprimer le profil actif consulté : actif = premier restant, pas de plantage (Review Focus 2)', () => {
+      const p = monter({ donnees: deux('p1'), confirme: true })
+      p.q('[data-test="supprimer-p1"]')!.click()
+      expect(p.confirmer).toHaveBeenCalledWith('Supprimer le profil Enfant et toute sa progression ?')
+      expect(p.ctx.donnees.profilActif).toBe('p2')
+      expect(p.ctx.donnees.profils).toHaveLength(1)
+      expect(p.q('.profils button.actif')!.getAttribute('data-id')).toBe('p2')
+      expect(p.q<HTMLButtonElement>('[data-test="supprimer-p2"]')!.disabled).toBe(true)
+    })
+
+    it('supprimer + confirmer false : rien', () => {
+      const p = monter({ donnees: deux(), confirme: false })
+      p.q('[data-test="supprimer-p2"]')!.click()
+      expect(p.ctx.sauver).not.toHaveBeenCalled()
+    })
+
+    it('import d\'un fichier v1 + confirmer : v2 à 1 profil (Review Focus 3)', async () => {
+      const p = monter({ donnees: deux() })
+      await importer(p, JSON.stringify(fixtureV1()))
+      expect(p.ctx.donnees.version).toBe(2)
+      expect(p.ctx.donnees.profils).toHaveLength(1)
+      expect(p.ctx.donnees.profils[0]!.series).toHaveLength(2)
+      expect(p.q('.profils button.actif')!.getAttribute('data-id')).toBe(p.ctx.donnees.profilActif)
+    })
   })
 })

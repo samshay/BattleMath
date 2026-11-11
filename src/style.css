@@ -115,3 +115,8 @@ button:disabled { opacity: 0.4; }
   .grille-faits td[data-etat="en_cours"] { background: rgba(250, 176, 5, 0.35); }
   .grille-faits td[data-etat="maitrise"] { background: rgba(105, 219, 124, 0.35); }
 }
+.parents-ecran .ligne-profil { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.parents-ecran .ligne-profil input[type="text"] { font-size: 1.1rem; padding: 8px; border-radius: 8px; border: 2px solid var(--bord); background: var(--surface); color: var(--texte); width: 10rem; }
+.parents-ecran .couleurs { display: flex; gap: 6px; }
+.parents-ecran button.couleur { width: 32px; height: 32px; min-height: 0; padding: 0; border-radius: 50%; border: 2px solid transparent; }
+.parents-ecran button.couleur.actif { border-color: var(--texte); box-shadow: 0 0 0 2px var(--surface); }

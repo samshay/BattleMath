@@ -3,8 +3,9 @@ import type { Op, ParcoursId, Vitesse } from '../core/types'
 import { calculsARevoir, joursEntrainement, niveauxARetravailler, parcoursVisibles, synthese } from '../core/progression'
 import { formaterSecondes, nomParcours } from '../core/format'
 import type { Rng } from '../core/rng'
-import { donneesVides, profilActif } from '../storage/schema'
-import type { Reglages } from '../storage/schema'
+import { COULEURS, donneesVides, MAX_PROFILS, prenomValide, profilActif } from '../storage/schema'
+import type { Couleur, Profil, Reglages } from '../storage/schema'
+import { ajouterProfil, majProfil, profilParId, reinitialiserProfil, supprimerProfil } from '../storage/profils'
 import { exporterJson, importerJson, nomFichierExport } from '../storage/store'
 import type { StockageLike } from '../storage/store'
 import { h } from './dom'
@@ -12,6 +13,7 @@ import { AVERTISSEMENTS, MSG_NON_ENREGISTRE } from './accueil'
 import type { ContexteApp } from './accueil'
 import { graphiqueReussite, graphiqueTemps, MAX_SERIES } from './graphiques'
 import { grilleFaits } from './grilleFaits'
+import { rangeeProfils } from './profils'
 
 export interface Verrou { estOuvert(): boolean; ouvrir(): void }
 
@@ -54,6 +56,15 @@ export function rendreParents(ctx: ContexteApp, deps: DepsParents): HTMLElement 
   let messageGate = ''
   let message = ''
   let parcours: ParcoursId | null = null
+  let consulteId = ctx.donnees.profilActif
+
+  function consulte(): Profil {
+    const p = profilParId(ctx.donnees, consulteId)
+    if (p) return p
+    const repli = profilActif(ctx.donnees)
+    consulteId = repli.id
+    return repli
+  }
 
   function dessinerVerrou(): void {
     const champ = h('input', { type: 'number', inputmode: 'numeric', 'data-test': 'verrou-reponse', 'aria-label': 'Réponse' })
@@ -81,7 +92,7 @@ export function rendreParents(ctx: ContexteApp, deps: DepsParents): HTMLElement 
   }
 
   function revoirListe(op: 'add' | 'sub' | 'mul' | 'mix'): HTMLElement[] {
-    const { faits } = profilActif(ctx.donnees)
+    const { faits } = consulte()
     const ops: Op[] = op === 'mix' ? ['add', 'sub', 'mul'] : [op]
     const items = ops.flatMap((o) => calculsARevoir(faits, o))
       .sort((x, y) => y.erreurs / y.tentatives - x.erreurs / x.tentatives || y.tempsMoyen - x.tempsMoyen)
@@ -94,7 +105,7 @@ export function rendreParents(ctx: ContexteApp, deps: DepsParents): HTMLElement 
   }
 
   function niveauxTable(p: ParcoursId): HTMLElement[] {
-    const lignes = niveauxARetravailler(profilActif(ctx.donnees).series, p)
+    const lignes = niveauxARetravailler(consulte().series, p)
     if (lignes.length === 0) return [h('p', {}, 'Rien à signaler pour le moment.')]
     return [
       h('h3', {}, 'Niveaux à retravailler'),
@@ -107,9 +118,7 @@ export function rendreParents(ctx: ContexteApp, deps: DepsParents): HTMLElement 
 
   function sauverReglages(r: Partial<Reglages>): void {
     message = ''
-    const d = ctx.donnees
-    // provisoire : remplacé par majProfil (tâche 4)
-    ctx.sauver({ ...d, profils: d.profils.map((p) => (p.id === d.profilActif ? { ...p, reglages: { ...p.reglages, ...r } } : p)) })
+    ctx.sauver(majProfil(ctx.donnees, consulteId, { reglages: { ...consulte().reglages, ...r } }))
     dessiner()
   }
 
@@ -135,13 +144,50 @@ export function rendreParents(ctx: ContexteApp, deps: DepsParents): HTMLElement 
     if (!r.ok) { message = ERREURS_IMPORT[r.erreur]; dessiner(); return }
     if (!deps.confirmer('Remplacer tous les progrès par ce fichier ?')) return
     ctx.sauver(r.donnees)
+    consulteId = ctx.donnees.profilActif
     message = 'Progrès importés'
     dessiner()
   }
 
+  function ligneProfil(p: Profil): HTMLElement {
+    const champ = h('input', {
+      type: 'text', maxlength: '12', 'data-test': `prenom-${p.id}`, 'aria-label': `Prénom de ${p.prenom}`,
+      onchange: () => {
+        const v = champ.value
+        if (!prenomValide(v)) {
+          champ.value = profilParId(ctx.donnees, p.id)?.prenom ?? p.prenom
+          message = 'Le prénom doit faire 1 à 12 caractères'
+          dessiner()
+          return
+        }
+        message = ''
+        ctx.sauver(majProfil(ctx.donnees, p.id, { prenom: v }))
+        dessiner()
+      },
+    })
+    champ.value = p.prenom
+    const couleurs = (Object.keys(COULEURS) as Couleur[]).map((c) => h('button', {
+      type: 'button', class: c === p.couleur ? 'couleur actif' : 'couleur', 'data-couleur': c, 'aria-label': c,
+      style: `background: ${COULEURS[c]}`,
+      onclick: () => { message = ''; ctx.sauver(majProfil(ctx.donnees, p.id, { couleur: c })); dessiner() },
+    }))
+    return h('div', { class: 'ligne-profil', 'data-id': p.id },
+      champ,
+      h('div', { class: 'couleurs' }, ...couleurs),
+      h('button', {
+        type: 'button', 'data-test': `supprimer-${p.id}`, disabled: String(ctx.donnees.profils.length === 1),
+        onclick: () => {
+          if (!deps.confirmer(`Supprimer le profil ${p.prenom} et toute sa progression ?`)) return
+          ctx.sauver(supprimerProfil(ctx.donnees, p.id))
+          message = ''
+          dessiner()
+        },
+      }, 'Supprimer'))
+  }
+
   function dessiner(): void {
     if (!deps.verrou.estOuvert()) { dessinerVerrou(); return }
-    const donnees = profilActif(ctx.donnees)
+    const donnees = consulte()
     const visibles = parcoursVisibles(donnees.reglages.parcoursAvances)
     const avecSeries = [...new Set(donnees.series.map((s) => s.parcours))]
     const choix = [...new Set<ParcoursId>([...visibles, ...avecSeries])]
@@ -179,6 +225,7 @@ export function rendreParents(ctx: ContexteApp, deps: DepsParents): HTMLElement 
     racine.replaceChildren(
       h('a', { href: '#/' }, 'Retour'),
       h('h1', {}, 'Espace parents'),
+      rangeeProfils(ctx.donnees.profils, consulteId, (id) => { consulteId = id; parcours = null; message = ''; dessiner() }),
       ...(ctx.avertissement ? [h('p', { class: 'avertissement', 'data-test': 'avertissement' }, ctx.avertissement === 'stockage_indisponible' ? MSG_NON_ENREGISTRE : AVERTISSEMENTS[ctx.avertissement])] : []),
       h('h2', {}, 'Progression'),
       select,
@@ -199,16 +246,33 @@ export function rendreParents(ctx: ContexteApp, deps: DepsParents): HTMLElement 
       h('label', { class: 'option' }, avances, ' Parcours avancés (3 chiffres)'),
       h('div', { class: 'actions' },
         h('button', { type: 'button', 'data-test': 'exporter', onclick: () => { void exporter() } }, 'Exporter'),
-        h('label', { class: 'importer' }, 'Importer ', importerInput),
-        h('button', {
-          type: 'button', class: 'danger', 'data-test': 'reset',
-          onclick: () => {
-            if (!deps.confirmer('Effacer toute la progression ? Cette action est définitive.')) return
-            ctx.sauver(donneesVides())
-            message = 'Progression effacée'
-            dessiner()
-          },
-        }, 'Remise à zéro')),
+        h('label', { class: 'importer' }, 'Importer ', importerInput)),
+      h('button', {
+        type: 'button', class: 'danger', 'data-test': 'reset-profil',
+        onclick: () => {
+          if (!deps.confirmer(`Effacer toute la progression de ${donnees.prenom} ? Cette action est définitive.`)) return
+          ctx.sauver(reinitialiserProfil(ctx.donnees, consulteId))
+          message = 'Progression effacée'
+          dessiner()
+        },
+      }, `Effacer la progression de ${donnees.prenom}`),
+      h('h2', {}, 'Profils'),
+      ...ctx.donnees.profils.map(ligneProfil),
+      h('button', {
+        type: 'button', 'data-test': 'ajouter-profil', disabled: String(ctx.donnees.profils.length >= MAX_PROFILS),
+        onclick: () => { ctx.sauver(ajouterProfil(ctx.donnees)); message = ''; dessiner() },
+      }, 'Ajouter un profil'),
+      h('button', {
+        type: 'button', class: 'danger', 'data-test': 'reset-tout',
+        onclick: () => {
+          if (!deps.confirmer('Effacer tous les profils et toute la progression ? Cette action est définitive.')) return
+          ctx.sauver(donneesVides())
+          consulteId = 'p1'
+          parcours = null
+          message = 'Progression effacée'
+          dessiner()
+        },
+      }, 'Tout effacer'),
       h('p', { class: 'message' }, message),
     )
   }
