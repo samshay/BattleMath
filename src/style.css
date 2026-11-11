@@ -53,15 +53,15 @@ button:active:not(:disabled) { transform: scale(0.96); filter: brightness(1.15);
 #app { max-width: 480px; margin: 0 auto; padding: 16px; }
 
 /* Accueil */
-.accueil { display: flex; flex-direction: column; gap: 16px; }
+.accueil { display: flex; flex-direction: column; gap: clamp(8px, 1.6dvh, 16px); }
 .accueil header { display: flex; justify-content: space-between; align-items: center; }
 .accueil h1 { margin: 0; font-size: 2.125rem; }
 .etoiles { display: flex; align-items: center; gap: 6px; color: var(--etoile); font-size: 1.5rem; }
 .profils.grand { flex-direction: column; }
-.profils.grand .profil { width: 100%; min-height: 72px; border-radius: var(--rayon-grand); font-size: 1.5rem; padding: 0 20px; gap: 14px; }
+.profils.grand .profil { width: 100%; min-height: clamp(56px, 8.5dvh, 72px); border-radius: var(--rayon-grand); font-size: 1.5rem; padding: 0 20px; gap: 14px; }
 .profils.grand .pastille-couleur { width: 32px; height: 32px; }
 .accueil h2 { margin: 0; font-size: 1.75rem; }
-.decor { display: flex; justify-content: space-between; align-items: center; min-height: 160px; padding: 0 8px; background-image: radial-gradient(circle, var(--texte) 1.5px, transparent 2px), radial-gradient(circle, var(--texte) 1px, transparent 1.5px); background-size: 120px 90px, 70px 110px; background-position: 10px 10px, 40px 50px; }
+.decor { display: flex; justify-content: space-between; align-items: center; min-height: clamp(96px, 19dvh, 160px); padding: 0 8px; background-image: radial-gradient(circle, var(--texte) 1.5px, transparent 2px), radial-gradient(circle, var(--texte) 1px, transparent 1.5px); background-size: 120px 90px, 70px 110px; background-position: 10px 10px, 40px 50px; }
 .accueil .joueur { color: var(--texte); display: flex; align-items: center; gap: 8px; font-size: 1.25rem; font-weight: bold; min-width: 0; }
 .accueil .joueur .pastille-couleur { width: 24px; height: 24px; }
 .accueil .joueur .prenom { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -70,10 +70,10 @@ button:active:not(:disabled) { transform: scale(0.96); filter: brightness(1.15);
 .profil { border-width: 3px; border-color: var(--bord); min-height: 56px; display: flex; align-items: center; gap: 8px; flex: 0 0 auto; white-space: nowrap; }
 .pastille-couleur { width: 24px; height: 24px; border-radius: 50%; flex: 0 0 auto; }
 .profil.actif { color: inherit; border: 3px solid var(--primaire); font-weight: bold; }
-.choix { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-.choix.tailles { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 1fr; }
-.op { min-height: 64px; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; font-weight: 800; padding: 0 12px; text-align: left; }
-.pastille-op { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--sur-accent); flex: 0 0 auto; }
+.choix { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.choix.tailles { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
+.op { min-height: clamp(56px, 7.5dvh, 64px); min-width: 0; display: flex; align-items: center; gap: 8px; font-size: 0.875rem; font-weight: 800; padding: 0 8px; text-align: left; overflow-wrap: anywhere; line-height: 1.1; }
+.pastille-op { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--sur-accent); flex: 0 0 auto; }
 .op[data-op="add"] .pastille-op { background: var(--op-add); }
 .op[data-op="sub"] .pastille-op { background: var(--op-sub); }
 .op[data-op="mul"] .pastille-op { background: var(--op-mul); }
@@ -84,12 +84,12 @@ button:active:not(:disabled) { transform: scale(0.96); filter: brightness(1.15);
 .op.actif[data-op="mix"] { border-color: var(--op-mix); }
 .taille { min-height: 56px; font-size: 1.06rem; font-weight: 800; }
 .actif { background: var(--surface); border: 3px solid var(--primaire); color: var(--texte); }
-.continuer { display: flex; align-items: center; gap: 14px; min-height: 72px; text-align: left; border-radius: var(--rayon-grand); background: var(--succes); border-color: var(--succes); color: var(--sur-accent); font-weight: bold; }
+.continuer { display: flex; align-items: center; gap: 14px; min-height: clamp(56px, 8.5dvh, 72px); text-align: left; border-radius: var(--rayon-grand); background: var(--succes); border-color: var(--succes); color: var(--sur-accent); font-weight: bold; }
 .continuer .lignes { display: flex; flex-direction: column; }
 .continuer .titre { font-size: 1.375rem; }
 .continuer .detail { font-size: 0.875rem; font-weight: 800; }
 .grille { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
-.niveau { aspect-ratio: 1 / 1.05; padding: 0; gap: 3px; border-radius: var(--rayon); font-size: 1rem; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.niveau { aspect-ratio: 1 / 1; max-height: clamp(56px, 11dvh, 92px); padding: 0; gap: 3px; border-radius: var(--rayon); font-size: 1rem; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .niveau .numero { font-size: 1.5rem; line-height: 1; }
 .niveau[data-etat="verrouille"] { background: var(--fond); color: var(--texte-doux); opacity: 1; }
 .niveau[data-etat="verrouille"] .numero { font-size: 0.95rem; }
@@ -103,8 +103,8 @@ button:active:not(:disabled) { transform: scale(0.96); filter: brightness(1.15);
 .banniere p { margin: 0 0 8px; }
 
 /* Jeu */
-.jeu { display: flex; flex-direction: column; gap: 12px; }
-.entete { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.jeu { display: flex; flex-direction: column; gap: clamp(6px, 1.4dvh, 12px); }
+.entete { display: flex; flex-direction: column; gap: clamp(4px, 1dvh, 8px); align-items: center; }
 .barre { display: flex; justify-content: space-between; align-items: center; }
 .pastilles { display: flex; gap: 7px; }
 .pastille { width: 14px; height: 14px; box-sizing: border-box; border-radius: 50%; background: transparent; border: 2px solid var(--texte-doux); }
@@ -114,31 +114,32 @@ button:active:not(:disabled) { transform: scale(0.96); filter: brightness(1.15);
 .pastille[data-etat="faux"] { background: var(--erreur); }
 .objectif { margin: 0; font-size: 0.9rem; color: var(--texte-doux); }
 button.discret { display: inline-flex; align-items: center; gap: 8px; min-height: 56px; font-size: 1rem; font-weight: 800; border-color: transparent; background: transparent; color: var(--texte-doux); padding: 0; }
-.calcul { font-size: 4.25rem; font-weight: 700; line-height: 1; text-align: center; margin-top: 8px; }
-.reponse { min-height: 76px; box-sizing: border-box; border-radius: 22px; background: var(--surface); border: 2px solid var(--primaire); display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: 700; gap: 8px; text-align: center; }
+.calcul { font-size: clamp(2.75rem, 9dvh, 4.25rem); font-weight: 700; line-height: 1; text-align: center; }
+.reponse { min-height: clamp(56px, 10dvh, 76px); box-sizing: border-box; border-radius: 22px; background: var(--surface); border: 2px solid var(--primaire); display: flex; align-items: center; justify-content: center; font-size: clamp(2rem, 6dvh, 3rem); font-weight: 700; gap: 8px; text-align: center; }
 .reponse.juste { border-color: var(--succes); color: var(--succes); }
 .reponse.correction { border-color: var(--erreur); }
 .barree { text-decoration: line-through; color: var(--erreur); }
 .attendu { color: var(--texte-doux); }
-.pave { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-.touche { min-height: 64px; font-size: 1.875rem; font-weight: 600; border-radius: var(--rayon); }
+.pave { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(6px, 1.2dvh, 10px); }
+.touche { min-height: clamp(56px, 8.5dvh, 64px); font-size: 1.875rem; font-weight: 600; border-radius: var(--rayon); }
 .touche-valider { background: var(--succes); border-color: var(--succes); color: var(--sur-accent); font-size: 1.5rem; font-weight: 700; }
 .pave.juste .touche-valider { transform: scale(0.96); filter: brightness(1.15); }
 .touche.large { grid-column: span 2; }
 .touche.pleine { grid-column: 1 / -1; }
-.fin { display: flex; flex-direction: column; gap: 12px; align-items: center; text-align: center; }
-.decor-fin { align-self: stretch; min-height: 130px; justify-content: center; gap: 12px; position: relative; }
+.fin { display: flex; flex-direction: column; gap: clamp(6px, 1.4dvh, 12px); align-items: center; text-align: center; }
+.decor-fin { align-self: stretch; min-height: clamp(72px, 15dvh, 130px); justify-content: center; gap: 12px; position: relative; }
 .decor-fin .eclat { position: absolute; right: 10%; top: 0; }
-.score { margin: 0; font-size: 4rem; line-height: 1; font-weight: bold; }
+.decor-fin .illustration svg, .decor-fin .eclat svg { max-height: clamp(72px, 15dvh, 130px); width: auto; }
+.score { margin: 0; font-size: clamp(2.75rem, 8dvh, 4rem); line-height: 1; font-weight: bold; }
 .verdict { margin: 0; font-size: 1.75rem; font-family: var(--police-titre); font-weight: 600; }
 .verdict.validee { color: var(--succes); }
 .etoiles-fin { display: flex; gap: 8px; color: var(--etoile); }
 .temps { margin: 0; font-size: 1.06rem; }
 .temps-total { margin: 0; color: var(--texte-doux); }
 .fin .record.record-battu { display: flex; color: var(--succes); font-weight: 800; align-items: center; gap: 10px; padding: 12px 16px; border-radius: var(--rayon); background: var(--surface); border: 1.5px solid var(--succes); text-align: left; }
-.fin .actions { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+.fin .actions { display: flex; flex-direction: column; gap: clamp(6px, 1.4dvh, 12px); width: 100%; }
 .fin .actions .discret { justify-content: center; }
-.principal, .secondaire { min-height: 64px; border-radius: 22px; font-size: 1.375rem; font-weight: 700; }
+.principal, .secondaire { min-height: clamp(56px, 8.5dvh, 64px); border-radius: 22px; font-size: 1.375rem; font-weight: 700; }
 .principal { background: var(--primaire); border-color: var(--primaire); color: var(--sur-accent); }
 .secondaire { background: var(--surface); border: 1.5px solid var(--bord); color: var(--texte); }
 

@@ -30,6 +30,7 @@ PWA de calcul mental pour un enfant de CE2, utilisée sur téléphone en portrai
 ## Règles du projet
 - Identifiants et textes en français. Ton encourageant, phrases courtes pour un enfant de 8 ans.
 - Écrans enfant (accueil, jeu) : jamais d'`<input>` (le clavier du téléphone ne doit pas s'ouvrir), touches ≥ 56 px, pas de chrono visible. L'écran Parents est derrière un verrou et peut avoir des champs.
+- Écrans enfant (accueil, parcours, jeu, fin de série) : tout tient dans l'écran du téléphone en portrait, **jamais de défilement**, y compris dans Safari avec ses barres (viewport ≈ 390 × 664) et sur 360 × 640. Les hauteurs s'adaptent avec `clamp(…, Ndvh, …)` sans descendre sous 56 px ; les grilles utilisent `minmax(0, 1fr)` pour ne jamais déborder en largeur. Seul l'écran Parents peut défiler.
 - Temps en millisecondes dans le code et les données ; cibles des niveaux en secondes dans `src/core/levels.ts`.
 - Identifiants de parcours : `add|sub|mul|mix` + `-` + `1|2|3`. Clé de fait : `op:a·b` (a ≤ b pour add et mul).
 - Seul l'accueil (page « Qui joue ? ») change le profil actif ; l'écran Parents consulte un profil sans le rendre actif. La sélection opération/taille est réinitialisée au choix du joueur, pas à chaque retour sur la page de parcours.

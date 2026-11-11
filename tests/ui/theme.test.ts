@@ -28,6 +28,21 @@ describe('thème spatial', () => {
     expect(css).toMatch(/button:active:not\(:disabled\)\s*\{[^}]*transform: scale\(/)
     expect(css).toMatch(/\.pave\.juste \.touche-valider\s*\{/)
   })
+  it('grilles à deux colonnes : minmax(0, 1fr), jamais 1fr seul (le contenu ne doit pas élargir la grille)', () => {
+    const css = lire('src/style.css')
+    expect(css).toMatch(/\.choix \{[^}]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/)
+    expect(css).toMatch(/\.choix\.tailles \{[^}]*grid-auto-columns: minmax\(0, 1fr\)/)
+    expect(css).toMatch(/\.op \{[^}]*min-width: 0/)
+    expect(css).not.toMatch(/repeat\(\d, 1fr\)/)
+  })
+  it('écrans enfant sans défilement : hauteurs fluides en dvh, plancher 56 px', () => {
+    const css = lire('src/style.css')
+    for (const sel of ['.jeu', '.touche', '.reponse', '.calcul', '.profils.grand .profil', '.principal, .secondaire']) {
+      const regle = css.match(new RegExp(sel.replace(/[.,]/g, (c) => `\\${c}`) + ' \\{[^}]*\\}'))![0]
+      expect(regle, sel).toContain('dvh')
+    }
+    for (const [, px] of css.matchAll(/min-height: clamp\((\d+)px/g)) expect(Number(px)).toBeGreaterThanOrEqual(56)
+  })
   it('plus aucun glyphe ★ ✨ ⌫ dans src/ui', () => {
     for (const f of readdirSync(new URL('../../src/ui', import.meta.url))) {
       expect(lire(`src/ui/${f}`), f).not.toMatch(/[★✨⌫]/)
