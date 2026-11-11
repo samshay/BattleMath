@@ -3,7 +3,8 @@ import type { Op, ParcoursId, Vitesse } from '../core/types'
 import { calculsARevoir, joursEntrainement, niveauxARetravailler, parcoursVisibles, synthese } from '../core/progression'
 import { formaterSecondes, nomParcours } from '../core/format'
 import type { Rng } from '../core/rng'
-import { donneesVides } from '../storage/schema'
+import { donneesVides, profilActif } from '../storage/schema'
+import type { Reglages } from '../storage/schema'
 import { exporterJson, importerJson, nomFichierExport } from '../storage/store'
 import type { StockageLike } from '../storage/store'
 import { h } from './dom'
@@ -80,7 +81,7 @@ export function rendreParents(ctx: ContexteApp, deps: DepsParents): HTMLElement 
   }
 
   function revoirListe(op: 'add' | 'sub' | 'mul' | 'mix'): HTMLElement[] {
-    const { faits } = ctx.donnees
+    const { faits } = profilActif(ctx.donnees)
     const ops: Op[] = op === 'mix' ? ['add', 'sub', 'mul'] : [op]
     const items = ops.flatMap((o) => calculsARevoir(faits, o))
       .sort((x, y) => y.erreurs / y.tentatives - x.erreurs / x.tentatives || y.tempsMoyen - x.tempsMoyen)
@@ -93,7 +94,7 @@ export function rendreParents(ctx: ContexteApp, deps: DepsParents): HTMLElement 
   }
 
   function niveauxTable(p: ParcoursId): HTMLElement[] {
-    const lignes = niveauxARetravailler(ctx.donnees.series, p)
+    const lignes = niveauxARetravailler(profilActif(ctx.donnees).series, p)
     if (lignes.length === 0) return [h('p', {}, 'Rien à signaler pour le moment.')]
     return [
       h('h3', {}, 'Niveaux à retravailler'),
@@ -104,9 +105,11 @@ export function rendreParents(ctx: ContexteApp, deps: DepsParents): HTMLElement 
     ]
   }
 
-  function sauverReglages(r: Partial<typeof ctx.donnees.reglages>): void {
+  function sauverReglages(r: Partial<Reglages>): void {
     message = ''
-    ctx.sauver({ ...ctx.donnees, reglages: { ...ctx.donnees.reglages, ...r } })
+    const d = ctx.donnees
+    // provisoire : remplacé par majProfil (tâche 4)
+    ctx.sauver({ ...d, profils: d.profils.map((p) => (p.id === d.profilActif ? { ...p, reglages: { ...p.reglages, ...r } } : p)) })
     dessiner()
   }
 
@@ -138,7 +141,7 @@ export function rendreParents(ctx: ContexteApp, deps: DepsParents): HTMLElement 
 
   function dessiner(): void {
     if (!deps.verrou.estOuvert()) { dessinerVerrou(); return }
-    const { donnees } = ctx
+    const donnees = profilActif(ctx.donnees)
     const visibles = parcoursVisibles(donnees.reglages.parcoursAvances)
     const avecSeries = [...new Set(donnees.series.map((s) => s.parcours))]
     const choix = [...new Set<ParcoursId>([...visibles, ...avecSeries])]

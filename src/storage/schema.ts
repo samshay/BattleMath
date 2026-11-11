@@ -1,13 +1,44 @@
 import type { Essai, Fait, ParcoursId, Serie, Vitesse } from '../core/types'
 
-export const VERSION = 1
+export const VERSION = 2
+export const MAX_PROFILS = 4
+
+export const COULEURS = {
+  bleu: '#3b5bdb',
+  vert: '#2f9e44',
+  orange: '#e8590c',
+  violet: '#7048e8',
+  rose: '#d6336c',
+  turquoise: '#0c8599',
+} as const
+export type Couleur = keyof typeof COULEURS
+
+export function estCouleur(x: unknown): x is Couleur {
+  return typeof x === 'string' && Object.prototype.hasOwnProperty.call(COULEURS, x)
+}
 
 export interface Reglages {
   parcoursAvances: boolean
   vitesse: Vitesse
 }
 
+export interface Profil {
+  id: string
+  prenom: string
+  couleur: Couleur
+  reglages: Reglages
+  dernierParcours: ParcoursId | null
+  series: Serie[]
+  faits: Record<string, Fait>
+}
+
 export interface Donnees {
+  version: 2
+  profilActif: string
+  profils: Profil[]
+}
+
+interface DonneesV1 {
   version: 1
   reglages: Reglages
   dernierParcours: ParcoursId | null
@@ -15,8 +46,21 @@ export interface Donnees {
   faits: Record<string, Fait>
 }
 
+export function profilVide(id: string, prenom: string, couleur: Couleur): Profil {
+  return { id, prenom, couleur, reglages: { parcoursAvances: false, vitesse: 'normal' }, dernierParcours: null, series: [], faits: {} }
+}
+
 export function donneesVides(): Donnees {
-  return { version: 1, reglages: { parcoursAvances: false, vitesse: 'normal' }, dernierParcours: null, series: [], faits: {} }
+  return { version: 2, profilActif: 'p1', profils: [profilVide('p1', 'Enfant', 'bleu')] }
+}
+
+export function prenomValide(s: string): boolean {
+  const n = s.trim().length
+  return n >= 1 && n <= 12
+}
+
+export function profilActif(d: Donnees): Profil {
+  return d.profils.find((p) => p.id === d.profilActif) ?? d.profils[0]!
 }
 
 export type ResultatMigration =
@@ -69,16 +113,16 @@ function lireSerie(x: unknown): Serie | null {
 }
 
 function lireReglages(x: unknown): Reglages | null {
-  if (x === undefined) return donneesVides().reglages
+  const defaut = profilVide('', '', 'bleu').reglages
+  if (x === undefined) return defaut
   if (!estObjet(x)) return null
-  const defaut = donneesVides().reglages
   const parcoursAvances = x.parcoursAvances ?? defaut.parcoursAvances
   const vitesse = x.vitesse ?? defaut.vitesse
   if (typeof parcoursAvances !== 'boolean' || !VITESSES.includes(vitesse)) return null
   return { parcoursAvances, vitesse: vitesse as Vitesse }
 }
 
-function valider(brut: Obj): Donnees | null {
+function lireProfil(brut: Obj): Omit<DonneesV1, 'version'> | null {
   const reglages = lireReglages(brut.reglages)
   if (!reglages) return null
   const dernierParcours = brut.dernierParcours ?? null
@@ -96,13 +140,45 @@ function valider(brut: Obj): Donnees | null {
     if (!fait) return null
     faits[cle] = fait
   }
-  return { version: 1, reglages, dernierParcours, series, faits }
+  return { reglages, dernierParcours, series, faits }
+}
+
+function validerV1(brut: Obj): DonneesV1 | null {
+  const p = lireProfil(brut)
+  return p ? { version: 1, ...p } : null
+}
+
+function validerV2(brut: Obj): Donnees | null {
+  if (!Array.isArray(brut.profils) || brut.profils.length < 1 || brut.profils.length > MAX_PROFILS) return null
+  if (typeof brut.profilActif !== 'string') return null
+  const profils: Profil[] = []
+  const ids = new Set<string>()
+  for (const x of brut.profils) {
+    if (!estObjet(x)) return null
+    const { id, prenom, couleur } = x
+    if (typeof id !== 'string' || id === '' || ids.has(id)) return null
+    if (typeof prenom !== 'string' || !prenomValide(prenom) || !estCouleur(couleur)) return null
+    const p = lireProfil(x)
+    if (!p) return null
+    ids.add(id)
+    profils.push({ id, prenom, couleur, ...p })
+  }
+  if (!ids.has(brut.profilActif)) return null
+  return { version: 2, profilActif: brut.profilActif, profils }
 }
 
 export function migrer(brut: unknown): ResultatMigration {
   if (!estObjet(brut) || typeof brut.version !== 'number') return { ok: false, erreur: 'structure_invalide' }
   if (brut.version > VERSION) return { ok: false, erreur: 'version_inconnue' }
-  if (brut.version !== 1) return { ok: false, erreur: 'structure_invalide' }
-  const donnees = valider(brut)
+  let donnees: Donnees | null = null
+  if (brut.version === 1) {
+    const v1 = validerV1(brut)
+    if (v1) {
+      const { reglages, dernierParcours, series, faits } = v1
+      donnees = { version: 2, profilActif: 'p1', profils: [{ ...profilVide('p1', 'Enfant', 'bleu'), reglages, dernierParcours, series, faits }] }
+    }
+  } else if (brut.version === 2) {
+    donnees = validerV2(brut)
+  }
   return donnees ? { ok: true, donnees } : { ok: false, erreur: 'structure_invalide' }
 }

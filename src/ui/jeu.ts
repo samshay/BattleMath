@@ -8,6 +8,7 @@ import { formaterCalcul, formaterSecondes } from '../core/format'
 import { reponseAttendue } from '../core/faits'
 import type { ParcoursId } from '../core/types'
 import { enregistrerSerie } from '../storage/store'
+import { profilActif } from '../storage/schema'
 import {
   annulerCourant, avancer, bilan, calculCourant, corriger, creerSession, etatsPastilles, majFaits, repondre, versSerie,
 } from '../game/session'
@@ -50,7 +51,7 @@ export function rendreJeu(
   deps: { horloge?: Horloge; visibilite?: Visibilite; rng?: Rng; delaiFeedbackMs?: number } = {},
 ): EcranJeu {
   const racine = h('div', { class: 'jeu' })
-  if (etatNiveau(ctx.donnees.series, parcours, n) === 'verrouille') {
+  if (etatNiveau(profilActif(ctx.donnees).series, parcours, n) === 'verrouille') {
     ctx.naviguer({ nom: 'accueil' })
     return { element: racine, session: () => { throw new Error('niveau verrouillé') }, detruire: () => {} }
   }
@@ -60,8 +61,8 @@ export function rendreJeu(
   const rng = deps.rng ?? createRng(Date.now())
   const delai = deps.delaiFeedbackMs ?? 400
 
-  const cibleMs = cibleEffective(niveau(parcours, n).cibleMs, ctx.donnees.reglages.vitesse)
-  let s = creerSession(parcours, n, cibleMs, genererSerie(parcours, n, rng, ctx.donnees.faits))
+  const cibleMs = cibleEffective(niveau(parcours, n).cibleMs, profilActif(ctx.donnees).reglages.vitesse)
+  let s = creerSession(parcours, n, cibleMs, genererSerie(parcours, n, rng, profilActif(ctx.donnees).faits))
   let t0: number | null = horloge.now()
   let quitte = false
   let interrompu = false
@@ -91,7 +92,7 @@ export function rendreJeu(
     cache = true
     if (s.phase !== 'question') return
     const exclues = new Set(s.calculs.map(cleUnicite))
-    s = annulerCourant(s, genererRemplacement(parcours, n, rng, exclues, ctx.donnees.faits))
+    s = annulerCourant(s, genererRemplacement(parcours, n, rng, exclues, profilActif(ctx.donnees).faits))
     t0 = null
     interrompu = true
     pave.vider()
@@ -172,7 +173,7 @@ export function rendreJeu(
       : b.raison === 'trop_lent'
         ? `Bravo, presque ! Un peu plus vite la prochaine fois (objectif ${formaterObjectif(s.cibleMs)}, toi ${formaterSecondes(b.tempsMedian)}).`
         : 'Il faut 9 bonnes réponses. Encore un essai ?'
-    const suivantOuvert = n < 8 && etatNiveau(donnees.series, parcours, n + 1) !== 'verrouille'
+    const suivantOuvert = n < 8 && etatNiveau(profilActif(donnees).series, parcours, n + 1) !== 'verrouille'
     racine.replaceChildren(h('div', { class: 'fin' },
       h('p', { class: 'score' }, `${b.bonnes} sur 10`),
       h('p', { class: 'temps' }, `Ton temps : ${formaterSecondes(b.tempsMedian)} par calcul (objectif ${formaterObjectif(s.cibleMs)})`),

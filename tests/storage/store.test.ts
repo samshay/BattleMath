@@ -3,7 +3,8 @@ import {
   CLE_STOCKAGE, charger, sauver, enregistrerSerie, exporterJson, nomFichierExport, importerJson, reinitialiser,
 } from '../../src/storage/store'
 import type { StockageLike } from '../../src/storage/store'
-import { donneesVides } from '../../src/storage/schema'
+import { donneesVides, profilActif, profilVide } from '../../src/storage/schema'
+import { fixtureV1 } from '../aide/donnees'
 import type { Donnees } from '../../src/storage/schema'
 import type { Serie } from '../../src/core/types'
 
@@ -71,13 +72,20 @@ describe('enregistrerSerie', () => {
     ])
     expect(r).not.toBe(base)
     expect(base).toEqual(copie)
-    expect(r.series).toHaveLength(2)
-    expect(r.series[1]).toEqual(serie)
-    expect(r.dernierParcours).toBe('mul-2')
-    expect(r.faits['x']!.tentatives).toBe(2)
-    expect(r.faits['nouveau']!.tentatives).toBe(1)
-    expect(r.reglages).toEqual(base.reglages)
-    expect(r.version).toBe(1)
+    const p = profilActif(r)
+    expect(p.series).toHaveLength(2)
+    expect(p.series[1]).toEqual(serie)
+    expect(p.dernierParcours).toBe('mul-2')
+    expect(p.faits['x']!.tentatives).toBe(2)
+    expect(p.faits['nouveau']!.tentatives).toBe(1)
+    expect(p.reglages).toEqual(profilActif(base).reglages)
+    expect(r.version).toBe(2)
+  })
+  it('n\'écrit que dans le profil actif', () => {
+    const d: Donnees = { ...donneesVides(), profilActif: 'p2', profils: [profilVide('p1', 'A', 'bleu'), profilVide('p2', 'B', 'vert')] }
+    const r = enregistrerSerie(d, serie, [{ cle: 'x', essai: { juste: true, temps: 1000 } }])
+    expect(r.profils[0]).toEqual(d.profils[0])
+    expect(r.profils[1]!.series).toEqual([serie])
   })
 })
 
@@ -90,6 +98,11 @@ describe('export / import', () => {
     const r = importerJson(exporterJson(d))
     expect(r.ok).toBe(true)
     if (r.ok) expect(r.donnees).toEqual(d)
+  })
+  it('import d\'une v1 : migrée en v2', () => {
+    const r = importerJson(JSON.stringify(fixtureV1()))
+    expect(r.ok).toBe(true)
+    if (r.ok) expect(r.donnees.version).toBe(2)
   })
   it('nom de fichier', () => {
     expect(nomFichierExport(new Date(2026, 10, 11))).toBe('battlemath-2026-11-11.json')

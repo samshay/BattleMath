@@ -2,6 +2,7 @@ import { parcoursId } from '../core/types'
 import type { ParcoursOp, Taille } from '../core/types'
 import { etatsParcours, parcoursVisibles, prochainNiveau, totalEtoiles } from '../core/progression'
 import type { Chargement } from '../storage/store'
+import { profilActif } from '../storage/schema'
 import type { Donnees } from '../storage/schema'
 import { nomParcours } from '../core/format'
 import { h } from './dom'
@@ -38,7 +39,8 @@ export function rendreAccueil(ctx: ContexteApp): HTMLElement {
   let fermee = banniereDejaFermee()
 
   function dessiner(): void {
-    const { donnees, selection } = ctx
+    const { selection } = ctx
+    const donnees = profilActif(ctx.donnees)
     if (selection.taille === 3 && !donnees.reglages.parcoursAvances) selection.taille = 1
     const parcours = parcoursId(selection.op, selection.taille)
     const etats = etatsParcours(donnees.series, parcours)

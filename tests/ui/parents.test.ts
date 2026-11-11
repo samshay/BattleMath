@@ -5,14 +5,15 @@ import type { Verrou } from '../../src/ui/parents'
 import type { ContexteApp } from '../../src/ui/accueil'
 import { donneesVides } from '../../src/storage/schema'
 import type { Donnees } from '../../src/storage/schema'
+import { avecProfil } from '../aide/donnees'
 import { exporterJson } from '../../src/storage/store'
 import { createRng } from '../../src/core/rng'
 
 function donneesAvecSeries(): Donnees {
-  const d = donneesVides()
-  d.series = [{ date: '2026-11-10T10:00:00.000Z', parcours: 'add-1', niveau: 1, bonnes: 10, tempsMedian: 3000, tempsCible: 4000, reussie: true, validee: true }]
-  d.faits = { 'add:3·4': { tentatives: 5, erreurs: 3, tempsCumule: 31000, derniers: [] } }
-  return d
+  return avecProfil({
+    series: [{ date: '2026-11-10T10:00:00.000Z', parcours: 'add-1', niveau: 1, bonnes: 10, tempsMedian: 3000, tempsCible: 4000, reussie: true, validee: true }],
+    faits: { 'add:3·4': { tentatives: 5, erreurs: 3, tempsCumule: 31000, derniers: [] } },
+  })
 }
 
 function monter(opts: { ouvert?: boolean; donnees?: Donnees; confirme?: boolean; partager?: (f: File) => Promise<'ok' | 'annule' | 'echec'> } = {}) {
@@ -79,8 +80,8 @@ describe('rendreParents', () => {
   })
 
   it('plus de 30 séries : légende « (30 dernières séries) »', () => {
-    const d = donneesAvecSeries()
-    d.series = Array.from({ length: 31 }, () => d.series[0]!)
+    const base = donneesAvecSeries()
+    const d = avecProfil({ ...base.profils[0]!, series: Array.from({ length: 31 }, () => base.profils[0]!.series[0]!) })
     expect(monter({ donnees: d }).el.querySelector('figcaption')!.textContent).toContain('(30 dernières séries)')
     expect(monter().el.querySelector('figcaption')!.textContent).not.toContain('dernières')
   })
@@ -116,7 +117,7 @@ describe('rendreParents', () => {
     const r = p.q<HTMLInputElement>('input[name="vitesse"][value="tranquille"]')!
     r.checked = true
     r.dispatchEvent(new Event('change', { bubbles: true }))
-    expect(p.ctx.sauver).toHaveBeenCalledWith(expect.objectContaining({ reglages: expect.objectContaining({ vitesse: 'tranquille' }) }))
+    expect(p.ctx.sauver).toHaveBeenCalledWith(expect.objectContaining({ profils: [expect.objectContaining({ reglages: expect.objectContaining({ vitesse: 'tranquille' }) })] }))
   })
 
   it('export -> telecharger sans partager', async () => {
@@ -139,7 +140,7 @@ describe('rendreParents', () => {
   })
 
   it('le parcours courant absent des options : repli sur la première option', () => {
-    const d = donneesVides(); d.dernierParcours = 'add-3'
+    const d = avecProfil({ dernierParcours: 'add-3' })
     const p = monter({ donnees: d })
     const sel = p.q<HTMLSelectElement>('select[data-test="parcours"]')!
     expect(sel.value).toBe(sel.options[0]!.value)
@@ -161,7 +162,7 @@ describe('rendreParents', () => {
 
   it('import valide + confirmer -> sauver', async () => {
     const p = monter()
-    const d = donneesVides(); d.reglages.vitesse = 'rapide'
+    const d = avecProfil({ reglages: { parcoursAvances: false, vitesse: 'rapide' } })
     await importer(p, JSON.stringify(d))
     expect(p.confirmer).toHaveBeenCalledWith('Remplacer tous les progrès par ce fichier ?')
     expect(p.ctx.sauver).toHaveBeenCalledWith(d)

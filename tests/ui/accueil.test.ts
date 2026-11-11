@@ -5,6 +5,7 @@ import type { ContexteApp } from '../../src/ui/accueil'
 import { bannierInstallation, detecterPlateforme } from '../../src/ui/installation'
 import { donneesVides } from '../../src/storage/schema'
 import type { Donnees } from '../../src/storage/schema'
+import { avecProfil } from '../aide/donnees'
 import type { Serie } from '../../src/core/types'
 
 function ctxDe(donnees: Donnees = donneesVides(), avertissement: ContexteApp['avertissement'] = null): ContexteApp {
@@ -41,15 +42,12 @@ describe('rendreAccueil', () => {
   })
 
   it('parcoursAvances : 3 tailles', () => {
-    const d = donneesVides()
-    d.reglages.parcoursAvances = true
+    const d = avecProfil({ reglages: { parcoursAvances: true, vitesse: 'normal' } })
     expect(rendreAccueil(ctxDe(d)).querySelectorAll('button.taille')).toHaveLength(3)
   })
 
   it('dernier parcours en 3 chiffres sans avancés : pas de continuer, grille sur add-1', () => {
-    const d = donneesVides()
-    d.dernierParcours = 'add-3'
-    d.series = [serieValidee('add-3', 1)]
+    const d = avecProfil({ dernierParcours: 'add-3', series: [serieValidee('add-3', 1)] })
     const ctx = ctxDe(d)
     ctx.selection = { op: 'add', taille: 3 }
     const racine = rendreAccueil(ctx)
@@ -60,9 +58,7 @@ describe('rendreAccueil', () => {
   })
 
   it('continuer mène au prochain niveau du dernier parcours', () => {
-    const d = donneesVides()
-    d.dernierParcours = 'mul-1'
-    d.series = [serieValidee('mul-1', 1)]
+    const d = avecProfil({ dernierParcours: 'mul-1', series: [serieValidee('mul-1', 1)] })
     const ctx = ctxDe(d)
     const racine = rendreAccueil(ctx)
     const bouton = racine.querySelector<HTMLButtonElement>('[data-test="continuer"]')!
@@ -97,8 +93,7 @@ describe('rendreAccueil', () => {
   })
 
   it('total d\'étoiles dans l\'en-tête', () => {
-    const d = donneesVides()
-    d.series = [serieValidee('add-1', 1)]
+    const d = avecProfil({ series: [serieValidee('add-1', 1)] })
     expect(rendreAccueil(ctxDe(d)).querySelector('header')!.textContent).toContain('★ 2')
   })
 })

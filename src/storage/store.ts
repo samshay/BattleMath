@@ -1,6 +1,6 @@
 import type { Essai, Serie } from '../core/types'
 import { majFait } from '../core/faits'
-import { donneesVides, migrer } from './schema'
+import { donneesVides, migrer, profilActif } from './schema'
 import type { Donnees, ResultatMigration } from './schema'
 
 export const CLE_STOCKAGE = 'battlemath.v1'
@@ -53,15 +53,11 @@ export interface MajFaitEntree {
 }
 
 export function enregistrerSerie(d: Donnees, serie: Serie, faits: readonly MajFaitEntree[]): Donnees {
-  const nouveauxFaits = { ...d.faits }
+  const actif = profilActif(d)
+  const nouveauxFaits = { ...actif.faits }
   for (const { cle, essai } of faits) nouveauxFaits[cle] = majFait(nouveauxFaits[cle], essai)
-  return {
-    version: d.version,
-    reglages: { ...d.reglages },
-    dernierParcours: serie.parcours,
-    series: [...d.series, serie],
-    faits: nouveauxFaits,
-  }
+  const maj = { ...actif, dernierParcours: serie.parcours, series: [...actif.series, serie], faits: nouveauxFaits }
+  return { ...d, profils: d.profils.map((p) => (p === actif ? maj : p)) }
 }
 
 export function exporterJson(d: Donnees): string {
