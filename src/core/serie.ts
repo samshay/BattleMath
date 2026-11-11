@@ -54,7 +54,6 @@ export function genererSerie(parcours: ParcoursId, n: number, rng: Rng, faits: R
   const { op, taille } = decomposerParcours(parcours)
   const serie: Calcul[] = []
   const utilises = new Set<string>()
-  const exclus = new Set<string>() // faits faibles non retenus : pas de tirage ordinaire
 
   const ajouter = (c: Calcul): void => {
     serie.push(c)
@@ -71,7 +70,7 @@ export function genererSerie(parcours: ParcoursId, n: number, rng: Rng, faits: R
         // Unicité préférée ; la répétition n'est tolérée (hors doublon consécutif) qu'en dernier recours.
         if (precedent && cleUnicite(precedent) === cle) continue
         if (essai < MAX_ESSAIS / 2 && utilises.has(cle)) continue
-      } else if (utilises.has(cle) || exclus.has(cleFait(c))) {
+      } else if (utilises.has(cle)) {
         continue
       }
       return c
@@ -87,7 +86,7 @@ export function genererSerie(parcours: ParcoursId, n: number, rng: Rng, faits: R
       const calcul = reconstruire(cle, defs)
       if (calcul) eligibles.push({ cle, calcul })
     }
-    for (const e of eligibles) exclus.add(e.cle)
+    // Au plus MAX_FAITS_FAIBLES faits forcés ; le reste est tiré uniformément (d'autres faits faibles peuvent sortir par hasard).
     for (const e of rng.shuffle(eligibles).slice(0, MAX_FAITS_FAIBLES)) {
       const c = e.calcul
       if (c.op !== 'sub' && rng.next() < 0.5) ajouter({ ...c, a: c.b, b: c.a })

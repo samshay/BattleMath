@@ -89,7 +89,8 @@ test('pondération : les faits faibles du niveau sont inclus, 3 max', () => {
   }
   for (let s = 0; s < 100; s++) {
     const cles = genererSerie('mul-1', 5, createRng(s), faits).map(cleFait)
-    expect(cles.filter((k) => k in faits).length).toBe(3)
+    // 3 faits forcés au minimum (max 3 forcés) ; d'autres peuvent sortir par hasard au tirage uniforme
+    expect(cles.filter((k) => k in faits).length).toBeGreaterThanOrEqual(3)
     expect(cles).not.toContain('mul:2·3')
   }
 })
