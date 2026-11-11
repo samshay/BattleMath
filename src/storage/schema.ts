@@ -4,12 +4,12 @@ export const VERSION = 2
 export const MAX_PROFILS = 4
 
 export const COULEURS = {
-  bleu: '#3b5bdb',
-  vert: '#2f9e44',
-  orange: '#e8590c',
-  violet: '#7048e8',
-  rose: '#d6336c',
-  turquoise: '#0c8599',
+  bleu: '#6C8CFF',
+  vert: '#5EE6A0',
+  orange: '#FF9F45',
+  violet: '#A78BFA',
+  rose: '#FF6FB1',
+  turquoise: '#4FD8EB',
 } as const
 export type Couleur = keyof typeof COULEURS
 

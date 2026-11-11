@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { donneesVides, estParcoursId, migrer, prenomValide, profilActif, profilVide, VERSION } from '../../src/storage/schema'
+import { COULEURS, donneesVides, estParcoursId, migrer, prenomValide, profilActif, profilVide, VERSION } from '../../src/storage/schema'
 import type { Donnees } from '../../src/storage/schema'
 import { fixtureV1 } from '../aide/donnees'
 
@@ -20,6 +20,9 @@ const deux = () => ({
 })
 
 describe('migrer v2', () => {
+  test('COULEURS : mêmes 6 clés, valeurs du thème spatial', () => {
+    expect(COULEURS).toEqual({ bleu: '#6C8CFF', vert: '#5EE6A0', orange: '#FF9F45', violet: '#A78BFA', rose: '#FF6FB1', turquoise: '#4FD8EB' })
+  })
   test('prénom importé trimé', () => {
     const d = v2({ prenom: ' Léa ' })
     const r = migrer(d)
