@@ -53,6 +53,9 @@ function dessiner(series: readonly Serie[], c: Config): SVGSVGElement {
     if (c.cibles) {
       svg.append(el('line', { class: 'cible', x1: x(i) - 5, x2: x(i) + 5, y1: y(s.tempsCible), y2: y(s.tempsCible), stroke: 'var(--succes)', 'stroke-width': 2 }))
     }
+    svg.append(el('text', {
+      class: 'niveau', x: x(i), y: y(c.valeur(s)) - 7, 'text-anchor': 'middle', fill: 'currentColor', 'font-size': 8,
+    }, `N${s.niveau}`))
     svg.append(el('circle', {
       class: s.validee ? 'point valide' : 'point', cx: x(i), cy: y(c.valeur(s)), r: 4,
       'data-niveau': s.niveau, 'data-validee': String(s.validee),

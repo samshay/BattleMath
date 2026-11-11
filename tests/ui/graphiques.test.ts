@@ -21,6 +21,7 @@ describe('graphiques', () => {
     expect(pts).toHaveLength(3)
     expect(pts.map((p) => p.getAttribute('data-validee'))).toEqual(['true', 'false', 'false'])
     expect(pts[0]!.getAttribute('data-niveau')).toBe('1')
+    expect([...g.querySelectorAll('text.niveau')].map((t) => t.textContent)).toEqual(['N1', 'N2', 'N2'])
     expect(Number(pts[0]!.getAttribute('cy'))).toBeLessThan(Number(pts[1]!.getAttribute('cy')))
   })
 

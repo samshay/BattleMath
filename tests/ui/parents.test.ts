@@ -15,7 +15,7 @@ function donneesAvecSeries(): Donnees {
   return d
 }
 
-function monter(opts: { ouvert?: boolean; donnees?: Donnees; confirme?: boolean; partager?: (f: File) => Promise<boolean> } = {}) {
+function monter(opts: { ouvert?: boolean; donnees?: Donnees; confirme?: boolean; partager?: (f: File) => Promise<'ok' | 'annule' | 'echec'> } = {}) {
   const ctx: ContexteApp = {
     donnees: opts.donnees ?? donneesAvecSeries(), avertissement: null, sauver: vi.fn(), naviguer: vi.fn(), selection: { op: 'add', taille: 1 },
   }
@@ -99,6 +99,25 @@ describe('rendreParents', () => {
     p.q('[data-test="exporter"]')!.click()
     await attendre()
     expect(p.telecharger).toHaveBeenCalledWith(expect.stringMatching(/^battlemath-\d{4}-\d{2}-\d{2}\.json$/), exporterJson(p.ctx.donnees))
+  })
+
+  it.each([['annule', 0], ['echec', 1], ['ok', 0]] as const)('partage %s -> telecharger x%i', async (res, n) => {
+    const partager = vi.fn(async () => res)
+    Object.defineProperty(navigator, 'canShare', { value: () => true, configurable: true })
+    try {
+      const p = monter({ partager })
+      p.q('[data-test="exporter"]')!.click()
+      await attendre()
+      expect(partager).toHaveBeenCalled()
+      expect(p.telecharger).toHaveBeenCalledTimes(n)
+    } finally { delete (navigator as unknown as Record<string, unknown>).canShare }
+  })
+
+  it('le parcours courant absent des options : repli sur la première option', () => {
+    const d = donneesVides(); d.dernierParcours = 'add-3'
+    const p = monter({ donnees: d })
+    const sel = p.q<HTMLSelectElement>('select[data-test="parcours"]')!
+    expect(sel.value).toBe(sel.options[0]!.value)
   })
 
   async function importer(p: ReturnType<typeof monter>, texte: string) {

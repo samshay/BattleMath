@@ -89,7 +89,7 @@ button:disabled { opacity: 0.4; }
 .parents-ecran h1 { margin: 0; font-size: 1.5rem; }
 .parents-ecran h2 { margin: 16px 0 0; font-size: 1.2rem; }
 .parents-ecran h3 { margin: 8px 0 0; font-size: 1rem; }
-.parents-ecran figure { margin: 0; color: var(--texte); }
+.parents-ecran figure { margin: 0; }
 .parents-ecran figcaption { font-size: 0.85rem; opacity: 0.8; text-align: center; }
 .parents-ecran table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
 .parents-ecran th, .parents-ecran td { border: 1px solid var(--bord); padding: 4px 6px; text-align: left; }

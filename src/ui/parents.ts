@@ -35,7 +35,7 @@ export function genererQuestionVerrou(rng: Rng): { question: string; reponse: nu
 export interface DepsParents {
   verrou: Verrou
   rng: Rng
-  partager?: (fichier: File) => Promise<boolean>
+  partager?: (fichier: File) => Promise<'ok' | 'annule' | 'echec'>
   telecharger: (nom: string, contenu: string) => void
   confirmer: (msg: string) => boolean
 }
@@ -52,7 +52,7 @@ function nomParcours(p: ParcoursId): string {
 const pct = (x: number): string => `${Math.round(x * 100)} %`
 
 export function rendreParents(ctx: ContexteApp, deps: DepsParents): HTMLElement {
-  const racine = h('div', { class: 'parents-ecran parents' })
+  const racine = h('div', { class: 'parents-ecran' })
   let question = genererQuestionVerrou(deps.rng)
   let echecs = 0
   let messageGate = ''
@@ -116,14 +116,18 @@ export function rendreParents(ctx: ContexteApp, deps: DepsParents): HTMLElement 
     const json = exporterJson(ctx.donnees)
     const nom = nomFichierExport(new Date())
     const fichier = new File([json], nom, { type: 'application/json' })
-    let partage = false
-    if (deps.partager && navigator.canShare?.({ files: [fichier] })) partage = await deps.partager(fichier)
-    if (!partage) deps.telecharger(nom, json)
+    let resultat: 'ok' | 'annule' | 'echec' = 'echec'
+    if (deps.partager && navigator.canShare?.({ files: [fichier] })) resultat = await deps.partager(fichier)
+    if (resultat === 'echec') deps.telecharger(nom, json)
   }
 
   async function importer(input: HTMLInputElement): Promise<void> {
     const fichier = input.files?.[0]
     if (!fichier) return
+    try { await importerFichier(fichier) } finally { try { input.value = '' } catch { /* ignoré */ } }
+  }
+
+  async function importerFichier(fichier: File): Promise<void> {
     let texte: string
     try { texte = await fichier.text() } catch { message = 'Fichier illisible'; dessiner(); return }
     const r = importerJson(texte)
@@ -140,7 +144,10 @@ export function rendreParents(ctx: ContexteApp, deps: DepsParents): HTMLElement 
     const visibles = parcoursVisibles(donnees.reglages.parcoursAvances)
     const avecSeries = [...new Set(donnees.series.map((s) => s.parcours))]
     const choix = [...new Set<ParcoursId>([...visibles, ...avecSeries])]
-    if (parcours === null || !choix.includes(parcours)) parcours = donnees.dernierParcours ?? parcoursId('add', 1)
+    if (parcours === null || !choix.includes(parcours)) {
+      const defaut = donnees.dernierParcours ?? parcoursId('add', 1)
+      parcours = choix.includes(defaut) ? defaut : choix[0]!
+    }
     const courant = parcours
     const { op, taille } = decomposerParcours(courant)
     const seriesParcours = donnees.series.filter((s) => s.parcours === courant)

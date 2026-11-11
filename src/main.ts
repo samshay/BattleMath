@@ -65,7 +65,11 @@ function afficher(route: Route): void {
           verrou: creerVerrouSession(sessionStorageOuNull()),
           rng: createRng(Date.now()),
           partager: navigator.share
-            ? async (f) => { try { await navigator.share({ files: [f] }); return true } catch { return false } }
+            ? async (f) => {
+              try { await navigator.share({ files: [f] }); return 'ok' as const } catch (e) {
+                return e instanceof DOMException && e.name === 'AbortError' ? 'annule' as const : 'echec' as const
+              }
+            }
             : undefined,
           telecharger,
           confirmer: (m) => window.confirm(m),
