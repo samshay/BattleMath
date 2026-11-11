@@ -16,8 +16,8 @@ export default defineConfig({
         scope: '/BattleMath/',
         display: 'standalone',
         orientation: 'portrait',
-        background_color: '#f6f7fb',
-        theme_color: '#3b5bdb',
+        background_color: '#0B1026',
+        theme_color: '#0B1026',
         icons: [
           { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
           { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },

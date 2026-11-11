@@ -1,0 +1,25 @@
+/* BattleMath — thème spatial. Référence à fusionner dans src/style.css (ce fichier n'est pas importé par l'app).
+   Thème unique : supprimer les deux blocs @media (prefers-color-scheme: dark) de src/style.css. */
+:root {
+  /* variables existantes, nouvelles valeurs */
+  --fond: #0B1026;
+  --texte: #EEF1FF;
+  --primaire: #4FD8EB;
+  --surface: #161E44;
+  --succes: #5EE6A0;
+  --erreur: #FF7A7A;
+  --bord: #2A3570;
+
+  /* nouvelles variables */
+  --texte-doux: #A9B4E0;      /* textes secondaires, remplace les opacity: 0.7 / 0.8 et #868e96 */
+  --sur-accent: #0B1026;      /* texte posé sur --primaire, --succes ou une couleur d'opération (remplace color: #fff) */
+  --op-add: #4FD8EB;
+  --op-sub: #FFB547;
+  --op-mul: #FF6FB1;
+  --op-mix: #A78BFA;
+  --etoile: #FFB547;
+  --police-titre: 'Fredoka', system-ui, sans-serif;   /* titres, chiffres, calcul, pavé */
+  --police-texte: 'Nunito', system-ui, sans-serif;    /* tout le reste */
+  --rayon: 20px;
+  --rayon-grand: 24px;
+}

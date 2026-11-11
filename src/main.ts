@@ -1,4 +1,8 @@
 import './style.css'
+import '@fontsource/fredoka/latin-600.css'
+import '@fontsource/fredoka/latin-700.css'
+import '@fontsource/nunito/latin-700.css'
+import '@fontsource/nunito/latin-800.css'
 import { registerSW } from 'virtual:pwa-register'
 import { createRng } from './core/rng'
 import { charger, sauver } from './storage/store'
