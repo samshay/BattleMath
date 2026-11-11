@@ -5,8 +5,7 @@ import type { ContexteApp } from '../../src/ui/accueil'
 import { bannierInstallation, detecterPlateforme } from '../../src/ui/installation'
 import { donneesVides, profilActif } from '../../src/storage/schema'
 import type { Donnees } from '../../src/storage/schema'
-import { avecProfil, deuxProfils } from '../aide/donnees'
-import type { Serie } from '../../src/core/types'
+import { deuxProfils } from '../aide/donnees'
 
 function ctxDe(donnees: Donnees = donneesVides(), avertissement: ContexteApp['avertissement'] = null): ContexteApp {
   const ctx: ContexteApp = {
@@ -19,71 +18,44 @@ function ctxDe(donnees: Donnees = donneesVides(), avertissement: ContexteApp['av
   return ctx
 }
 
-const serieValidee = (parcours: Serie['parcours'], niveau: number): Serie => ({
-  date: '2026-11-11T10:00:00.000Z', parcours, niveau, bonnes: 10, tempsMedian: 2, tempsCible: 4, reussie: true, validee: true,
-})
-
 beforeEach(() => {
   try { localStorage.clear() } catch { /* ignoré */ }
 })
 
-describe('rendreAccueil', () => {
-  it('sans série : pas de continuer, 8 niveaux, seul le 1 ouvert, 2 tailles', () => {
-    const racine = rendreAccueil(ctxDe())
-    expect(racine.querySelector('[data-test="continuer"]')).toBeNull()
-    const niveaux = racine.querySelectorAll<HTMLButtonElement>('button.niveau')
-    expect(niveaux).toHaveLength(8)
-    expect(niveaux[0]!.dataset.etat).toBe('ouvert')
-    expect(niveaux[0]!.disabled).toBe(false)
-    expect(niveaux[1]!.disabled).toBe(true)
-    expect(racine.querySelectorAll('button.taille')).toHaveLength(2)
-    expect(racine.querySelectorAll('button.op')).toHaveLength(4)
+describe('rendreAccueil (page 1)', () => {
+  it('« Qui joue ? », une pastille par profil, lien Parents, pas de grille', () => {
+    const racine = rendreAccueil(ctxDe(deuxProfils()))
+    expect(racine.querySelector('h2')!.textContent).toBe('Qui joue ?')
+    expect(racine.querySelectorAll('button.profil')).toHaveLength(2)
+    expect(racine.querySelector('.profils')!.classList.contains('grand')).toBe(true)
     expect(racine.querySelector('a[href="#/parents"]')).not.toBeNull()
+    expect(racine.querySelector('button.niveau')).toBeNull()
     expect(racine.querySelector('.avertissement')).toBeNull()
   })
 
-  it('parcoursAvances : 3 tailles', () => {
-    const d = avecProfil({ reglages: { parcoursAvances: true, vitesse: 'normal' } })
-    expect(rendreAccueil(ctxDe(d)).querySelectorAll('button.taille')).toHaveLength(3)
+  it('un seul profil : la page est quand même affichée', () => {
+    expect(rendreAccueil(ctxDe()).querySelectorAll('button.profil')).toHaveLength(1)
   })
 
-  it('dernier parcours en 3 chiffres sans avancés : pas de continuer, grille sur add-1', () => {
-    const d = avecProfil({ dernierParcours: 'add-3', series: [serieValidee('add-3', 1)] })
-    const ctx = ctxDe(d)
-    ctx.selection = { op: 'add', taille: 3 }
-    const racine = rendreAccueil(ctx)
-    expect(racine.querySelector('[data-test="continuer"]')).toBeNull()
-    expect(ctx.selection.taille).toBe(1)
-    racine.querySelector<HTMLButtonElement>('button.niveau[data-niveau="1"]')!.click()
-    expect(ctx.naviguer).toHaveBeenCalledWith({ nom: 'jeu', parcours: 'add-1', niveau: 1 })
+  it('clic sur l\'autre profil : sauver avec ce profil actif puis parcours', () => {
+    const ctx = ctxDe(deuxProfils())
+    rendreAccueil(ctx).querySelector<HTMLButtonElement>('button.profil[data-id="p2"]')!.click()
+    expect(ctx.sauver).toHaveBeenCalledTimes(1)
+    expect(profilActif(vi.mocked(ctx.sauver).mock.calls[0]![0]).id).toBe('p2')
+    expect(ctx.naviguer).toHaveBeenCalledWith({ nom: 'parcours' })
   })
 
-  it('continuer mène au prochain niveau du dernier parcours', () => {
-    const d = avecProfil({ dernierParcours: 'mul-1', series: [serieValidee('mul-1', 1)] })
-    const ctx = ctxDe(d)
-    const racine = rendreAccueil(ctx)
-    const bouton = racine.querySelector<HTMLButtonElement>('[data-test="continuer"]')!
-    expect(bouton.textContent).toContain('niveau 2')
-    bouton.click()
-    expect(ctx.naviguer).toHaveBeenCalledWith({ nom: 'jeu', parcours: 'mul-1', niveau: 2 })
+  it('pastille déjà active : navigue sans sauver', () => {
+    const ctx = ctxDe(deuxProfils())
+    rendreAccueil(ctx).querySelector<HTMLButtonElement>('button.profil[data-id="p1"]')!.click()
+    expect(ctx.sauver).not.toHaveBeenCalled()
+    expect(ctx.naviguer).toHaveBeenCalledWith({ nom: 'parcours' })
   })
 
-  it('clic sur un niveau ouvert navigue vers le jeu', () => {
-    const ctx = ctxDe()
-    rendreAccueil(ctx).querySelector<HTMLButtonElement>('button.niveau[data-niveau="1"]')!.click()
-    expect(ctx.naviguer).toHaveBeenCalledWith({ nom: 'jeu', parcours: 'add-1', niveau: 1 })
-  })
-
-  it('clic sur une opération re-rend dans la même racine', () => {
-    const ctx = ctxDe()
-    const racine = rendreAccueil(ctx)
-    racine.querySelector<HTMLButtonElement>('button.op[data-op="mul"]')!.click()
-    expect(ctx.selection.op).toBe('mul')
-    expect(racine.querySelector('button.op[data-op="mul"]')!.classList.contains('actif')).toBe(true)
-    expect(racine.querySelector('button.op[data-op="add"]')!.classList.contains('actif')).toBe(false)
-    racine.querySelector<HTMLButtonElement>('button.taille[data-taille="2"]')!.click()
-    expect(ctx.selection.taille).toBe(2)
-    expect(racine.querySelectorAll('button.niveau')).toHaveLength(8)
+  it('aria-pressed suit le profil actif', () => {
+    const racine = rendreAccueil(ctxDe(deuxProfils({}, {}, 'p2')))
+    expect(racine.querySelector('button.profil[data-id="p2"]')!.getAttribute('aria-pressed')).toBe('true')
+    expect(racine.querySelector('button.profil[data-id="p1"]')!.getAttribute('aria-pressed')).toBe('false')
   })
 
   it('affiche les avertissements', () => {
@@ -91,69 +63,6 @@ describe('rendreAccueil', () => {
       .toBe('Les progrès ne pourront pas être enregistrés sur cet appareil.')
     expect(rendreAccueil(ctxDe(donneesVides(), 'donnees_corrompues')).querySelector('.avertissement')!.textContent)
       .toBe('Les données enregistrées sont illisibles, on repart de zéro.')
-  })
-
-  it('total d\'étoiles dans l\'en-tête', () => {
-    const d = avecProfil({ series: [serieValidee('add-1', 1)] })
-    expect(rendreAccueil(ctxDe(d)).querySelector('header')!.textContent).toContain('★ 2')
-  })
-})
-
-describe('profils sur l\'accueil', () => {
-  it('2 profils : 2 pastilles, étoiles du profil actif', () => {
-    const d = deuxProfils({ series: [serieValidee('add-1', 1)] }, {})
-    const racine = rendreAccueil(ctxDe(d))
-    expect(racine.querySelectorAll('button.profil')).toHaveLength(2)
-    expect(racine.querySelector('header')!.textContent).toContain('★ 2')
-  })
-
-  it('un seul profil : la rangée est quand même affichée', () => {
-    expect(rendreAccueil(ctxDe()).querySelectorAll('button.profil')).toHaveLength(1)
-  })
-
-  it('clic sur l\'autre profil : sauver, grille sur son dernier parcours', () => {
-    const d = deuxProfils({}, { dernierParcours: 'mul-2', series: [serieValidee('mul-2', 1)] })
-    const ctx = ctxDe(d)
-    const racine = rendreAccueil(ctx)
-    racine.querySelector<HTMLButtonElement>('button.profil[data-id="p2"]')!.click()
-    expect(ctx.sauver).toHaveBeenCalledTimes(1)
-    expect(profilActif(vi.mocked(ctx.sauver).mock.calls[0]![0]).id).toBe('p2')
-    expect(ctx.selection).toEqual({ op: 'mul', taille: 2 })
-    expect(racine.querySelector('button.op[data-op="mul"]')!.classList.contains('actif')).toBe(true)
-    expect(racine.querySelector('button.profil[data-id="p2"]')!.classList.contains('actif')).toBe(true)
-    expect(racine.querySelector('header')!.textContent).toContain('★ 2')
-    expect(racine.querySelector('[data-test="continuer"]')).not.toBeNull()
-  })
-
-  it('appui sur la pastille déjà active : rien', () => {
-    const ctx = ctxDe(deuxProfils())
-    const racine = rendreAccueil(ctx)
-    racine.querySelector<HTMLButtonElement>('button.profil[data-id="p1"]')!.click()
-    expect(ctx.sauver).not.toHaveBeenCalled()
-  })
-
-  it('pastilles : aria-pressed suit le profil actif', () => {
-    const racine = rendreAccueil(ctxDe(deuxProfils({}, {}, 'p2')))
-    expect(racine.querySelector('button.profil[data-id="p2"]')!.getAttribute('aria-pressed')).toBe('true')
-    expect(racine.querySelector('button.profil[data-id="p1"]')!.getAttribute('aria-pressed')).toBe('false')
-  })
-
-  it('profil sans dernier parcours : retour sur add-1', () => {
-    const ctx = ctxDe(deuxProfils())
-    ctx.selection = { op: 'mul', taille: 2 }
-    const racine = rendreAccueil(ctx)
-    racine.querySelector<HTMLButtonElement>('button.profil[data-id="p2"]')!.click()
-    expect(ctx.selection).toEqual({ op: 'add', taille: 1 })
-  })
-
-  it('bascule vers un profil dont le 3 chiffres est masqué : taille 1, pas de Continuer', () => {
-    const d = deuxProfils({}, { dernierParcours: 'add-3', series: [serieValidee('add-3', 1)] })
-    const ctx = ctxDe(d)
-    const racine = rendreAccueil(ctx)
-    racine.querySelector<HTMLButtonElement>('button.profil[data-id="p2"]')!.click()
-    expect(ctx.selection.taille).toBe(1)
-    expect(racine.querySelector('[data-test="continuer"]')).toBeNull()
-    expect(racine.querySelectorAll('button.taille')).toHaveLength(2)
   })
 })
 

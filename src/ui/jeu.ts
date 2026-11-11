@@ -53,7 +53,7 @@ export function rendreJeu(
   const racine = h('div', { class: 'jeu' })
   const actif = profilActif(ctx.donnees)
   if (etatNiveau(actif.series, parcours, n) === 'verrouille') {
-    ctx.naviguer({ nom: 'accueil' })
+    ctx.naviguer({ nom: 'parcours' })
     return { element: racine, session: () => { throw new Error('niveau verrouillé') }, detruire: () => {} }
   }
 
@@ -107,11 +107,11 @@ export function rendreJeu(
   })
   window.addEventListener('hashchange', quitter, { once: true })
 
-  function boutonAccueil(): HTMLElement {
+  function boutonRetour(): HTMLElement {
     return h('button', {
-      type: 'button', class: 'discret', 'data-test': 'accueil',
-      onclick: () => { quitter(); ctx.naviguer({ nom: 'accueil' }) },
-    }, 'Accueil')
+      type: 'button', class: 'discret', 'data-test': 'retour',
+      onclick: () => { quitter(); ctx.naviguer({ nom: 'parcours' }) },
+    }, 'Retour')
   }
 
   function dessiner(): void {
@@ -120,7 +120,7 @@ export function rendreJeu(
       h('p', { class: 'joueur', 'data-test': 'joueur' },
         h('span', { class: 'pastille-couleur', style: `background: ${COULEURS[actif.couleur]}` }), actif.prenom),
       h('p', { class: 'objectif' }, `Objectif : moins de ${formaterObjectif(s.cibleMs).replace(/ s$/, ' secondes')} par calcul`),
-      boutonAccueil(),
+      boutonRetour(),
     )
     calculEl.textContent = formaterCalcul(calculCourant(s))
     const enfants: Node[] = []
@@ -190,7 +190,7 @@ export function rendreJeu(
         type: 'button', class: 'principal', 'data-test': 'suivant',
         onclick: () => ctx.naviguer({ nom: 'jeu', parcours, niveau: n + 1 }),
       }, 'Niveau suivant')] : []),
-      h('button', { type: 'button', 'data-test': 'accueil', onclick: () => ctx.naviguer({ nom: 'accueil' }) }, 'Accueil'),
+      h('button', { type: 'button', 'data-test': 'retour', onclick: () => ctx.naviguer({ nom: 'parcours' }) }, 'Retour'),
     ))
   }
 

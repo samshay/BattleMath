@@ -242,12 +242,12 @@ describe('rendreJeu', () => {
     expect(j.ecran.session().reponses[0]!.tempsMs).toBe(2000)
   })
 
-  it('Accueil à mi-série : rien sauvé, navigue, désabonne', () => {
+  it('Retour à mi-série : rien sauvé, navigue, désabonne', () => {
     const j = monter()
     j.repondreJuste()
-    j.q('[data-test="accueil"]')!.click()
+    j.q('[data-test="retour"]')!.click()
     expect(j.ctx.sauver).not.toHaveBeenCalled()
-    expect(j.ctx.naviguer).toHaveBeenCalledWith({ nom: 'accueil' })
+    expect(j.ctx.naviguer).toHaveBeenCalledWith({ nom: 'parcours' })
     expect(j.desabonner).toHaveBeenCalled()
   })
 
@@ -280,21 +280,21 @@ describe('rendreJeu', () => {
     expect(j.ecran.element.textContent).not.toContain('Attention')
   })
 
-  it('niveau verrouillé : retour accueil immédiat', () => {
+  it('niveau verrouillé : retour au parcours immédiat', () => {
     const j = monter({ n: 3 })
-    expect(j.ctx.naviguer).toHaveBeenCalledWith({ nom: 'accueil' })
+    expect(j.ctx.naviguer).toHaveBeenCalledWith({ nom: 'parcours' })
     expect(j.ecran.element.children).toHaveLength(0)
   })
 
-  it('fin : Rejouer, Niveau suivant (débloqué) et Accueil', () => {
+  it('fin : Rejouer, Niveau suivant (débloqué) et Retour', () => {
     const j = monter()
     for (let i = 0; i < 10; i++) j.repondreJuste()
     j.q('[data-test="rejouer"]')!.click()
     expect(j.ctx.naviguer).toHaveBeenLastCalledWith({ nom: 'jeu', parcours: 'mul-1', niveau: 1 })
     j.q('[data-test="suivant"]')!.click()
     expect(j.ctx.naviguer).toHaveBeenLastCalledWith({ nom: 'jeu', parcours: 'mul-1', niveau: 2 })
-    j.q('[data-test="accueil"]')!.click()
-    expect(j.ctx.naviguer).toHaveBeenLastCalledWith({ nom: 'accueil' })
+    j.q('[data-test="retour"]')!.click()
+    expect(j.ctx.naviguer).toHaveBeenLastCalledWith({ nom: 'parcours' })
   })
 
   it('fin avec trop d\'erreurs : pas de Niveau suivant, message dédié', () => {

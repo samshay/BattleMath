@@ -4,11 +4,13 @@ import { estParcoursId } from '../storage/schema'
 export type Route =
   | { nom: 'accueil' }
   | { nom: 'jeu'; parcours: ParcoursId; niveau: number }
+  | { nom: 'parcours' }
   | { nom: 'parents' }
 
 export function parserHash(hash: string): Route {
   const [vide, nom, parcours, niveau, ...reste] = hash.replace(/^#/, '').split('/')
   if (vide !== '' || reste.length > 0) return { nom: 'accueil' }
+  if (nom === 'parcours' && parcours === undefined) return { nom: 'parcours' }
   if (nom === 'parents' && parcours === undefined) return { nom: 'parents' }
   if (nom === 'jeu' && estParcoursId(parcours) && niveau !== undefined && /^[1-8]$/.test(niveau)) {
     return { nom: 'jeu', parcours, niveau: Number(niveau) }
@@ -18,6 +20,7 @@ export function parserHash(hash: string): Route {
 
 export function versHash(r: Route): string {
   if (r.nom === 'jeu') return `#/jeu/${r.parcours}/${r.niveau}`
+  if (r.nom === 'parcours') return '#/parcours'
   return r.nom === 'parents' ? '#/parents' : '#/'
 }
 
