@@ -57,7 +57,7 @@ export function enregistrerSerie(d: Donnees, serie: Serie, faits: readonly MajFa
   const nouveauxFaits = { ...actif.faits }
   for (const { cle, essai } of faits) nouveauxFaits[cle] = majFait(nouveauxFaits[cle], essai)
   const maj = { ...actif, dernierParcours: serie.parcours, series: [...actif.series, serie], faits: nouveauxFaits }
-  return { ...d, profils: d.profils.map((p) => (p === actif ? maj : p)) }
+  return { ...d, profils: d.profils.map((p) => (p.id === d.profilActif ? maj : p)) }
 }
 
 export function exporterJson(d: Donnees): string {

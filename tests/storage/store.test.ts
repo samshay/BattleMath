@@ -83,9 +83,13 @@ describe('enregistrerSerie', () => {
   })
   it('n\'écrit que dans le profil actif', () => {
     const d: Donnees = { ...donneesVides(), profilActif: 'p2', profils: [profilVide('p1', 'A', 'bleu'), profilVide('p2', 'B', 'vert')] }
+    const copie = structuredClone(d)
     const r = enregistrerSerie(d, serie, [{ cle: 'x', essai: { juste: true, temps: 1000 } }])
-    expect(r.profils[0]).toEqual(d.profils[0])
+    expect(d).toEqual(copie)
+    expect(r.profils[0]).toEqual(copie.profils[0])
     expect(r.profils[1]!.series).toEqual([serie])
+    expect(r.profils[1]!.faits['x']!.tentatives).toBe(1)
+    expect(r.profils[1]!.dernierParcours).toBe('mul-2')
   })
 })
 

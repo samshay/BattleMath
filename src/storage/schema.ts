@@ -46,8 +46,10 @@ interface DonneesV1 {
   faits: Record<string, Fait>
 }
 
+const REGLAGES_DEFAUT: Reglages = { parcoursAvances: false, vitesse: 'normal' }
+
 export function profilVide(id: string, prenom: string, couleur: Couleur): Profil {
-  return { id, prenom, couleur, reglages: { parcoursAvances: false, vitesse: 'normal' }, dernierParcours: null, series: [], faits: {} }
+  return { id, prenom, couleur, reglages: { ...REGLAGES_DEFAUT }, dernierParcours: null, series: [], faits: {} }
 }
 
 export function donneesVides(): Donnees {
@@ -113,7 +115,7 @@ function lireSerie(x: unknown): Serie | null {
 }
 
 function lireReglages(x: unknown): Reglages | null {
-  const defaut = profilVide('', '', 'bleu').reglages
+  const defaut = REGLAGES_DEFAUT
   if (x === undefined) return defaut
   if (!estObjet(x)) return null
   const parcoursAvances = x.parcoursAvances ?? defaut.parcoursAvances
