@@ -12,7 +12,7 @@ import { formaterCalcul } from '../../src/core/format'
 import type { ParcoursId } from '../../src/core/types'
 
 function ctxDe(donnees: Donnees = donneesVides()): ContexteApp {
-  return { donnees, avertissement: null, sauver: vi.fn(), naviguer: vi.fn(), selection: { op: 'add', taille: 1 } }
+  return { donnees, avertissement: null, sauver: vi.fn(() => true), naviguer: vi.fn(), selection: { op: 'add', taille: 1 } }
 }
 
 function monter(opts: { parcours?: ParcoursId; n?: number; donnees?: Donnees; pas?: number; seed?: number } = {}) {
@@ -49,7 +49,8 @@ describe('rendreJeu', () => {
     expect(j.ecran.element.querySelectorAll('.pastille')).toHaveLength(10)
     expect(j.q('.pastille')!.dataset.etat).toBe('en_cours')
     expect(j.q('.calcul')!.textContent).toBe(formaterCalcul(calculCourant(j.ecran.session())))
-    const cibleS = Math.ceil(j.ecran.session().cibleMs / 1000)
+    const cibleMs = j.ecran.session().cibleMs
+    const cibleS = cibleMs % 1000 === 0 ? `${cibleMs / 1000}` : (cibleMs / 1000).toFixed(1).replace('.', ',')
     expect(j.q('.objectif')!.textContent).toBe(`Objectif : moins de ${cibleS} secondes par calcul`)
     expect(j.ecran.element.querySelector('input')).toBeNull()
   })
@@ -60,7 +61,7 @@ describe('rendreJeu', () => {
     d.reglages.vitesse = 'tranquille'
     const lent = monter({ donnees: d })
     expect(lent.ecran.session().cibleMs).toBe(normal.ecran.session().cibleMs * 1.5)
-    expect(lent.q('.objectif')!.textContent).toContain(`moins de ${Math.ceil(lent.ecran.session().cibleMs / 1000)} secondes`)
+    expect(lent.q('.objectif')!.textContent).toContain(`moins de ${(lent.ecran.session().cibleMs / 1000).toFixed(1).replace('.', ',')} secondes`)
   })
 
   it('tout juste : écran de fin, une seule sauvegarde, série validée et 10 faits', () => {
@@ -236,6 +237,28 @@ describe('rendreJeu', () => {
     window.dispatchEvent(new Event('hashchange'))
     expect(j.desabonner).toHaveBeenCalled()
     expect(j.ctx.sauver).not.toHaveBeenCalled()
+  })
+
+  it('detruire : désabonne la visibilité, le callback n\'a plus d\'effet', () => {
+    const j = monter()
+    const avant = j.ecran.session()
+    j.ecran.detruire()
+    expect(j.desabonner).toHaveBeenCalled()
+    j.cache()
+    expect(j.ecran.session()).toBe(avant)
+  })
+
+  it('échec d\'enregistrement : avertissement sous le verdict', () => {
+    const j = monter()
+    ;(j.ctx.sauver as ReturnType<typeof vi.fn>).mockReturnValue(false)
+    for (let i = 0; i < 10; i++) j.repondreJuste()
+    expect(j.ecran.element.textContent).toContain("Attention : la progression n'a pas pu être enregistrée sur cet appareil.")
+  })
+
+  it('enregistrement réussi : pas d\'avertissement', () => {
+    const j = monter()
+    for (let i = 0; i < 10; i++) j.repondreJuste()
+    expect(j.ecran.element.textContent).not.toContain('Attention')
   })
 
   it('niveau verrouillé : retour accueil immédiat', () => {

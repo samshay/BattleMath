@@ -34,10 +34,14 @@ function telecharger(nom: string, contenu: string): void {
   document.body.append(a)
   a.click()
   a.remove()
-  URL.revokeObjectURL(url)
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
 const stockage = localStorageOuNull()
+function selectionInitiale(): ContexteApp['selection'] {
+  const s = donnees.dernierParcours ? decomposerParcours(donnees.dernierParcours) : { op: 'add' as const, taille: 1 as const }
+  return s.taille === 3 && !donnees.reglages.parcoursAvances ? { op: s.op, taille: 1 } : s
+}
 const { donnees, avertissement } = charger(stockage)
 
 const ctx: ContexteApp = {
@@ -45,7 +49,10 @@ const ctx: ContexteApp = {
   avertissement,
   sauver(d: Donnees) {
     ctx.donnees = d
-    sauver(stockage, d)
+    const ok = sauver(stockage, d)
+    if (!ok) ctx.avertissement = 'stockage_indisponible'
+    else if (ctx.avertissement === 'donnees_corrompues') ctx.avertissement = null
+    return ok
   },
   naviguer(r) {
     const hash = versHash(r)
@@ -53,15 +60,21 @@ const ctx: ContexteApp = {
     if (location.hash === hash) afficher(r)
     else location.hash = hash
   },
-  selection: donnees.dernierParcours ? decomposerParcours(donnees.dernierParcours) : { op: 'add', taille: 1 },
+  selection: selectionInitiale(),
 }
 
 const app = document.getElementById('app')!
 
+let detruireEcran: (() => void) | null = null
+
 function afficher(route: Route): void {
+  detruireEcran?.()
+  detruireEcran = null
+  let jeu: ReturnType<typeof rendreJeu> | null = null
+  if (route.nom === 'jeu') { jeu = rendreJeu(ctx, route.parcours, route.niveau); detruireEcran = jeu.detruire }
   app.replaceChildren(
     route.nom === 'accueil' ? rendreAccueil(ctx)
-      : route.nom === 'jeu' ? rendreJeu(ctx, route.parcours, route.niveau).element
+      : jeu ? jeu.element
         : rendreParents(ctx, {
           verrou: creerVerrouSession(sessionStorageOuNull()),
           rng: createRng(Date.now()),

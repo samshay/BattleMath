@@ -11,7 +11,7 @@ function ctxDe(donnees: Donnees = donneesVides(), avertissement: ContexteApp['av
   return {
     donnees,
     avertissement,
-    sauver: vi.fn(),
+    sauver: vi.fn(() => true),
     naviguer: vi.fn(),
     selection: { op: 'add', taille: 1 },
   }
@@ -44,6 +44,19 @@ describe('rendreAccueil', () => {
     const d = donneesVides()
     d.reglages.parcoursAvances = true
     expect(rendreAccueil(ctxDe(d)).querySelectorAll('button.taille')).toHaveLength(3)
+  })
+
+  it('dernier parcours en 3 chiffres sans avancés : pas de continuer, grille sur add-1', () => {
+    const d = donneesVides()
+    d.dernierParcours = 'add-3'
+    d.series = [serieValidee('add-3', 1)]
+    const ctx = ctxDe(d)
+    ctx.selection = { op: 'add', taille: 3 }
+    const racine = rendreAccueil(ctx)
+    expect(racine.querySelector('[data-test="continuer"]')).toBeNull()
+    expect(ctx.selection.taille).toBe(1)
+    racine.querySelector<HTMLButtonElement>('button.niveau[data-niveau="1"]')!.click()
+    expect(ctx.naviguer).toHaveBeenCalledWith({ nom: 'jeu', parcours: 'add-1', niveau: 1 })
   })
 
   it('continuer mène au prochain niveau du dernier parcours', () => {

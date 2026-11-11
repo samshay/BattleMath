@@ -17,7 +17,7 @@ function donneesAvecSeries(): Donnees {
 
 function monter(opts: { ouvert?: boolean; donnees?: Donnees; confirme?: boolean; partager?: (f: File) => Promise<'ok' | 'annule' | 'echec'> } = {}) {
   const ctx: ContexteApp = {
-    donnees: opts.donnees ?? donneesAvecSeries(), avertissement: null, sauver: vi.fn(), naviguer: vi.fn(), selection: { op: 'add', taille: 1 },
+    donnees: opts.donnees ?? donneesAvecSeries(), avertissement: null, sauver: vi.fn(() => true), naviguer: vi.fn(), selection: { op: 'add', taille: 1 },
   }
   let ouvert = opts.ouvert ?? true
   const verrou: Verrou = { estOuvert: vi.fn(() => ouvert), ouvrir: vi.fn(() => { ouvert = true }) }
@@ -66,6 +66,31 @@ describe('rendreParents', () => {
     expect(p.verrou.ouvrir).not.toHaveBeenCalled()
     expect(p.el.textContent).toContain('Mauvaise réponse')
     expect(p.el.textContent).not.toContain('Synthèse')
+  })
+
+  it('verrou : lien Retour et validation par submit du formulaire', () => {
+    const p = monter({ ouvert: false })
+    expect(p.q('a[href="#/"]')).not.toBeNull()
+    const m = /(\d+) × (\d+)/.exec(p.el.textContent!)!
+    p.q<HTMLInputElement>('[data-test="verrou-reponse"]')!.value = String(Number(m[1]) * Number(m[2]))
+    p.q('form')!.dispatchEvent(new Event('submit', { cancelable: true }))
+    expect(p.verrou.ouvrir).toHaveBeenCalled()
+    expect(p.el.textContent).toContain('Synthèse')
+  })
+
+  it('plus de 30 séries : légende « (30 dernières séries) »', () => {
+    const d = donneesAvecSeries()
+    d.series = Array.from({ length: 31 }, () => d.series[0]!)
+    expect(monter({ donnees: d }).el.querySelector('figcaption')!.textContent).toContain('(30 dernières séries)')
+    expect(monter().el.querySelector('figcaption')!.textContent).not.toContain('dernières')
+  })
+
+  it('avertissement de stockage affiché en tête', () => {
+    const p = monter()
+    expect(p.q('.avertissement')).toBeNull()
+    p.ctx.avertissement = 'stockage_indisponible'
+    const p2 = rendreParents(p.ctx, { verrou: { estOuvert: () => true, ouvrir: () => {} }, rng: createRng(1), telecharger: vi.fn(), confirmer: () => true })
+    expect(p2.querySelector('.avertissement')!.textContent).toContain("n'a pas pu être enregistrée")
   })
 
   it('bonne réponse : ouvre et rend le contenu', () => {

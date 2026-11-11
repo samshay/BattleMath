@@ -1,8 +1,9 @@
-import { decomposerParcours, parcoursId } from '../core/types'
+import { parcoursId } from '../core/types'
 import type { ParcoursOp, Taille } from '../core/types'
-import { etatsParcours, prochainNiveau, totalEtoiles } from '../core/progression'
+import { etatsParcours, parcoursVisibles, prochainNiveau, totalEtoiles } from '../core/progression'
 import type { Chargement } from '../storage/store'
 import type { Donnees } from '../storage/schema'
+import { nomParcours } from '../core/format'
 import { h } from './dom'
 import { bannierInstallation, detecterPlateforme, estStandalone } from './installation'
 import type { Route } from './router'
@@ -10,15 +11,15 @@ import type { Route } from './router'
 export interface ContexteApp {
   donnees: Donnees
   avertissement: Chargement['avertissement']
-  sauver(d: Donnees): void
+  sauver(d: Donnees): boolean
   naviguer(r: Route): void
   selection: { op: ParcoursOp; taille: Taille }
 }
 
 const CLE_BANNIERE = 'battlemath.banniere'
 const OPERATIONS: [ParcoursOp, string][] = [['add', 'Additions'], ['sub', 'Soustractions'], ['mul', 'Multiplications'], ['mix', 'Mixte']]
-const NOMS_OP: Record<ParcoursOp, string> = { add: 'Additions', sub: 'Soustractions', mul: 'Multiplications', mix: 'Mixte' }
-const AVERTISSEMENTS = {
+export const MSG_NON_ENREGISTRE = "Attention : la progression n'a pas pu être enregistrée sur cet appareil."
+export const AVERTISSEMENTS = {
   stockage_indisponible: 'Les progrès ne pourront pas être enregistrés sur cet appareil.',
   donnees_corrompues: 'Les données enregistrées sont illisibles, on repart de zéro.',
 }
@@ -38,6 +39,7 @@ export function rendreAccueil(ctx: ContexteApp): HTMLElement {
 
   function dessiner(): void {
     const { donnees, selection } = ctx
+    if (selection.taille === 3 && !donnees.reglages.parcoursAvances) selection.taille = 1
     const parcours = parcoursId(selection.op, selection.taille)
     const etats = etatsParcours(donnees.series, parcours)
     const enfants: (Node | null)[] = []
@@ -47,15 +49,14 @@ export function rendreAccueil(ctx: ContexteApp): HTMLElement {
 
     enfants.push(h('header', {}, h('h1', {}, 'BattleMath'), h('span', { class: 'etoiles' }, `★ ${totalEtoiles(donnees.series)}`)))
 
-    if (donnees.dernierParcours) {
+    if (donnees.dernierParcours && parcoursVisibles(donnees.reglages.parcoursAvances).includes(donnees.dernierParcours)) {
       const n = prochainNiveau(donnees.series, donnees.dernierParcours)
       if (n !== null) {
-        const { op, taille } = decomposerParcours(donnees.dernierParcours)
         const cible = donnees.dernierParcours
         enfants.push(h('button', {
           type: 'button', class: 'continuer', 'data-test': 'continuer',
           onclick: () => ctx.naviguer({ nom: 'jeu', parcours: cible, niveau: n }),
-        }, `Continuer : ${NOMS_OP[op]} ${taille} chiffre${taille > 1 ? 's' : ''} niveau ${n}`))
+        }, `Continuer : ${nomParcours(cible)} niveau ${n}`))
       }
     }
 
@@ -66,7 +67,7 @@ export function rendreAccueil(ctx: ContexteApp): HTMLElement {
       }, nom))))
 
     const tailles: Taille[] = donnees.reglages.parcoursAvances ? [1, 2, 3] : [1, 2]
-    enfants.push(h('div', { class: 'choix' }, ...tailles.map((t) =>
+    enfants.push(h('div', { class: 'choix tailles' }, ...tailles.map((t) =>
       h('button', {
         type: 'button', class: t === selection.taille ? 'taille actif' : 'taille', 'data-taille': String(t),
         onclick: () => { selection.taille = t; dessiner() },

@@ -1,14 +1,15 @@
 import { decomposerParcours, parcoursId } from '../core/types'
 import type { Op, ParcoursId, Vitesse } from '../core/types'
 import { calculsARevoir, joursEntrainement, niveauxARetravailler, parcoursVisibles, synthese } from '../core/progression'
-import { formaterSecondes } from '../core/format'
+import { formaterSecondes, nomParcours } from '../core/format'
 import type { Rng } from '../core/rng'
 import { donneesVides } from '../storage/schema'
 import { exporterJson, importerJson, nomFichierExport } from '../storage/store'
 import type { StockageLike } from '../storage/store'
 import { h } from './dom'
+import { AVERTISSEMENTS, MSG_NON_ENREGISTRE } from './accueil'
 import type { ContexteApp } from './accueil'
-import { graphiqueReussite, graphiqueTemps } from './graphiques'
+import { graphiqueReussite, graphiqueTemps, MAX_SERIES } from './graphiques'
 import { grilleFaits } from './grilleFaits'
 
 export interface Verrou { estOuvert(): boolean; ouvrir(): void }
@@ -40,14 +41,8 @@ export interface DepsParents {
   confirmer: (msg: string) => boolean
 }
 
-const NOMS_OP = { add: 'Additions', sub: 'Soustractions', mul: 'Multiplications', mix: 'Mixte' }
 const VITESSES: [Vitesse, string][] = [['tranquille', 'Tranquille'], ['normal', 'Normal'], ['rapide', 'Rapide']]
 const ERREURS_IMPORT = { json_invalide: 'Fichier illisible', version_inconnue: 'Version inconnue', structure_invalide: 'Fichier invalide' }
-
-function nomParcours(p: ParcoursId): string {
-  const { op, taille } = decomposerParcours(p)
-  return `${NOMS_OP[op]} ${taille} chiffre${taille > 1 ? 's' : ''}`
-}
 
 const pct = (x: number): string => `${Math.round(x * 100)} %`
 
@@ -73,11 +68,13 @@ export function rendreParents(ctx: ContexteApp, deps: DepsParents): HTMLElement 
       dessiner()
     }
     racine.replaceChildren(
+      h('a', { href: '#/' }, 'Retour'),
       h('h1', {}, 'Espace parents'),
       h('p', {}, 'Pour entrer, répondez à cette question.'),
-      h('p', { class: 'question' }, question.question),
-      champ,
-      h('button', { type: 'button', class: 'principal', 'data-test': 'verrou-valider', onclick: valider }, 'Entrer'),
+      h('form', { 'data-test': 'verrou-form', onsubmit: (e) => { e.preventDefault(); valider() } },
+        h('p', { class: 'question' }, question.question),
+        champ,
+        h('button', { type: 'button', class: 'principal', 'data-test': 'verrou-valider', onclick: valider }, 'Entrer')),
       h('p', { class: 'message' }, messageGate),
     )
   }
@@ -108,6 +105,7 @@ export function rendreParents(ctx: ContexteApp, deps: DepsParents): HTMLElement 
   }
 
   function sauverReglages(r: Partial<typeof ctx.donnees.reglages>): void {
+    message = ''
     ctx.sauver({ ...ctx.donnees, reglages: { ...ctx.donnees.reglages, ...r } })
     dessiner()
   }
@@ -154,7 +152,7 @@ export function rendreParents(ctx: ContexteApp, deps: DepsParents): HTMLElement 
 
     const select = h('select', {
       'data-test': 'parcours', 'aria-label': 'Parcours',
-      onchange: (e) => { parcours = (e.target as HTMLSelectElement).value as ParcoursId; dessiner() },
+      onchange: (e) => { parcours = (e.target as HTMLSelectElement).value as ParcoursId; message = ''; dessiner() },
     }, ...choix.map((p) => h('option', { value: p }, nomParcours(p))))
     select.value = courant
 
@@ -174,13 +172,15 @@ export function rendreParents(ctx: ContexteApp, deps: DepsParents): HTMLElement 
     })
     avances.checked = donnees.reglages.parcoursAvances
 
+    const tronque = seriesParcours.length > MAX_SERIES ? ` (${MAX_SERIES} dernières séries)` : ''
     racine.replaceChildren(
       h('a', { href: '#/' }, 'Retour'),
       h('h1', {}, 'Espace parents'),
+      ...(ctx.avertissement ? [h('p', { class: 'avertissement', 'data-test': 'avertissement' }, ctx.avertissement === 'stockage_indisponible' ? MSG_NON_ENREGISTRE : AVERTISSEMENTS[ctx.avertissement])] : []),
       h('h2', {}, 'Progression'),
       select,
-      h('figure', {}, graphiqueReussite(seriesParcours), h('figcaption', {}, 'Réussite par série')),
-      h('figure', {}, graphiqueTemps(seriesParcours), h('figcaption', {}, 'Temps par calcul (trait = objectif)')),
+      h('figure', {}, graphiqueReussite(seriesParcours), h('figcaption', {}, `Réussite par série${tronque}`)),
+      h('figure', {}, graphiqueTemps(seriesParcours), h('figcaption', {}, `Temps par calcul (trait = objectif)${tronque}`)),
       h('h2', {}, 'Synthèse'),
       synth.length === 0
         ? h('p', {}, 'Aucune série jouée pour le moment.')

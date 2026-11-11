@@ -1,6 +1,6 @@
 import { createRng } from '../core/rng'
 import type { Rng } from '../core/rng'
-import { genererSerie } from '../core/serie'
+import { cleUnicite, genererRemplacement, genererSerie } from '../core/serie'
 import { niveau } from '../core/levels'
 import { cibleEffective } from '../core/validation'
 import { etatNiveau } from '../core/progression'
@@ -13,12 +13,13 @@ import {
 } from '../game/session'
 import type { Session } from '../game/session'
 import { h } from './dom'
+import { MSG_NON_ENREGISTRE } from './accueil'
 import type { ContexteApp } from './accueil'
 import { creerPave } from './pave'
 
 export interface Horloge { now(): number }
 export interface Visibilite { onCache(cb: () => void): () => void; onVisible(cb: () => void): () => void }
-export interface EcranJeu { element: HTMLElement; session(): Session }
+export interface EcranJeu { element: HTMLElement; session(): Session; detruire(): void }
 
 const horlogeParDefaut: Horloge = { now: () => performance.now() }
 function surVisibilite(cb: () => void, cache: boolean): () => void {
@@ -51,7 +52,7 @@ export function rendreJeu(
   const racine = h('div', { class: 'jeu' })
   if (etatNiveau(ctx.donnees.series, parcours, n) === 'verrouille') {
     ctx.naviguer({ nom: 'accueil' })
-    return { element: racine, session: () => { throw new Error('niveau verrouillé') } }
+    return { element: racine, session: () => { throw new Error('niveau verrouillé') }, detruire: () => {} }
   }
 
   const horloge = deps.horloge ?? horlogeParDefaut
@@ -89,7 +90,8 @@ export function rendreJeu(
     if (quitte) return
     cache = true
     if (s.phase !== 'question') return
-    s = annulerCourant(s, genererSerie(parcours, n, rng, ctx.donnees.faits)[0]!)
+    const exclues = new Set(s.calculs.map(cleUnicite))
+    s = annulerCourant(s, genererRemplacement(parcours, n, rng, exclues, ctx.donnees.faits))
     t0 = null
     interrompu = true
     pave.vider()
@@ -113,7 +115,7 @@ export function rendreJeu(
   function dessiner(): void {
     entete.replaceChildren(
       h('div', { class: 'pastilles' }, ...etatsPastilles(s).map((e) => h('span', { class: 'pastille', 'data-etat': e }))),
-      h('p', { class: 'objectif' }, `Objectif : moins de ${Math.ceil(s.cibleMs / 1000)} secondes par calcul`),
+      h('p', { class: 'objectif' }, `Objectif : moins de ${formaterObjectif(s.cibleMs).replace(/ s$/, ' secondes')} par calcul`),
       boutonAccueil(),
     )
     calculEl.textContent = formaterCalcul(calculCourant(s))
@@ -164,7 +166,7 @@ export function rendreJeu(
     quitter()
     const serie = versSerie(s, new Date().toISOString())
     const donnees = enregistrerSerie(ctx.donnees, serie, majFaits(s))
-    ctx.sauver(donnees)
+    const enregistre = ctx.sauver(donnees)
     const b = bilan(s)
     const verdict = b.raison === 'validee' ? 'Niveau validé !'
       : b.raison === 'trop_lent'
@@ -175,6 +177,7 @@ export function rendreJeu(
       h('p', { class: 'score' }, `${b.bonnes} sur 10`),
       h('p', { class: 'temps' }, `Ton temps : ${formaterSecondes(b.tempsMedian)} par calcul (objectif ${formaterObjectif(s.cibleMs)})`),
       h('p', { class: `verdict ${b.raison}` }, verdict),
+      ...(enregistre ? [] : [h('p', { class: 'avertissement', 'data-test': 'non-enregistre' }, MSG_NON_ENREGISTRE)]),
       h('button', {
         type: 'button', class: 'principal', 'data-test': 'rejouer',
         onclick: () => ctx.naviguer({ nom: 'jeu', parcours, niveau: n }),
@@ -189,5 +192,5 @@ export function rendreJeu(
 
   racine.append(entete, calculEl, reponseEl, pave.element)
   dessiner()
-  return { element: racine, session: () => s }
+  return { element: racine, session: () => s, detruire: quitter }
 }

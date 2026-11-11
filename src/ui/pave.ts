@@ -19,10 +19,11 @@ export function creerPave(opts: {
   let valeur = ''
   let actif = true
   const boutons = new Map<string, HTMLButtonElement>()
+  const element = h('div', { class: 'pave' })
 
   function maj(): void {
-    for (const b of boutons.values()) b.disabled = !actif
     boutons.get('valider')!.disabled = !actif || valeur === ''
+    element.classList.toggle('inactif', !actif)
   }
   function changer(v: string): void {
     valeur = v
@@ -52,10 +53,11 @@ export function creerPave(opts: {
     if (t === 'effacer') b.setAttribute('aria-label', 'Effacer')
     boutons.set(t, b)
   }
+  element.append(...boutons.values())
   maj()
 
   return {
-    element: h('div', { class: 'pave' }, ...boutons.values()),
+    element,
     valeur: () => valeur,
     effacer,
     vider: () => changer(''),

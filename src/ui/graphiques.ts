@@ -7,6 +7,7 @@ const MG = 28
 const MD = 8
 const MH = 8
 const MB = 20
+export const MAX_SERIES = 30
 
 function el(tag: string, attrs: Record<string, string | number>, texte?: string): SVGElement {
   const e = document.createElementNS(NS, tag)
@@ -29,7 +30,8 @@ interface Config {
   cibles: boolean
 }
 
-function dessiner(series: readonly Serie[], c: Config): SVGSVGElement {
+function dessiner(toutes: readonly Serie[], c: Config): SVGSVGElement {
+  const series = toutes.slice(-MAX_SERIES)
   const svg = svgVide(c.label)
   if (series.length === 0) {
     svg.append(el('text', { x: L / 2, y: H / 2, 'text-anchor': 'middle', fill: 'currentColor', 'font-size': 12 }, 'Pas encore de série'))
@@ -67,17 +69,18 @@ function dessiner(series: readonly Serie[], c: Config): SVGSVGElement {
 
 export function graphiqueReussite(series: readonly Serie[]): SVGSVGElement {
   return dessiner(series, {
-    label: 'Réussite par série', axeMax: 100, ticks: [0, 50, 100], formatTick: (v) => `${v}`,
+    label: 'Réussite par série', axeMax: 100, ticks: [0, 50, 100], formatTick: (v) => `${v} %`,
     valeur: (s) => s.bonnes * 10, cibles: false,
   })
 }
 
-export function graphiqueTemps(series: readonly Serie[]): SVGSVGElement {
+export function graphiqueTemps(toutes: readonly Serie[]): SVGSVGElement {
+  const series = toutes.slice(-MAX_SERIES)
   const maxMs = Math.max(1, ...series.map((s) => Math.max(s.tempsMedian, s.tempsCible)))
   const axeMax = maxMs
   return dessiner(series, {
     label: 'Temps par calcul', axeMax, ticks: [0, axeMax / 2, axeMax],
-    formatTick: (v) => `${Math.round(v / 100) / 10}`.replace('.', ','),
+    formatTick: (v) => `${Math.round(v / 100) / 10}`.replace('.', ',') + ' s',
     valeur: (s) => s.tempsMedian, cibles: true,
   })
 }

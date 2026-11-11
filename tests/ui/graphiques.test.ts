@@ -40,4 +40,17 @@ describe('graphiques', () => {
     const x1 = Number(cibles[0]!.getAttribute('x1')); const x2 = Number(cibles[0]!.getAttribute('x2'))
     expect(x2 - x1).toBe(10)
   })
+
+  it('45 séries : seulement les 30 dernières', () => {
+    const toutes = Array.from({ length: 45 }, (_, i) => serie(1 + (i % 8), 9, 3000, 4000, false))
+    expect(graphiqueReussite(toutes).querySelectorAll('circle.point')).toHaveLength(30)
+    expect(graphiqueTemps(toutes).querySelectorAll('circle.point')).toHaveLength(30)
+  })
+
+  it('ticks avec unités', () => {
+    const s = [serie(1, 10, 3000, 4000, true)]
+    const ticks = (g: SVGSVGElement) => [...g.querySelectorAll('text')].map((t) => t.textContent)
+    expect(ticks(graphiqueReussite(s))).toContain('100 %')
+    expect(ticks(graphiqueTemps(s))).toContain('4 s')
+  })
 })
