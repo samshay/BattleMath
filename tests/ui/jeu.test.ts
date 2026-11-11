@@ -20,10 +20,14 @@ function monter(opts: { parcours?: ParcoursId; n?: number; donnees?: Donnees; pa
   let t = 0
   const pas = opts.pas ?? 0
   let cache: () => void = () => {}
+  let visible: () => void = () => {}
   const desabonner = vi.fn()
-  const visibilite: Visibilite = { onCache: (cb) => { cache = cb; return desabonner } }
+  const visibilite: Visibilite = {
+    onCache: (cb) => { cache = cb; return desabonner },
+    onVisible: (cb) => { visible = cb; return desabonner },
+  }
   const ecran = rendreJeu(ctx, opts.parcours ?? 'mul-1', opts.n ?? 1, {
-    horloge: { now: () => (t += pas) }, visibilite, rng: createRng(1), delaiFeedbackMs: 0,
+    horloge: { now: () => (t += pas), }, visibilite, rng: createRng(1), delaiFeedbackMs: 0,
   })
   document.body.replaceChildren(ecran.element)
   const q = <T extends Element = HTMLElement>(sel: string) => ecran.element.querySelector<T>(sel)
@@ -34,7 +38,7 @@ function monter(opts: { parcours?: ParcoursId; n?: number; donnees?: Donnees; pa
   const attendu = () => reponseAttendue(calculCourant(ecran.session()))
   const repondreJuste = () => { taper(attendu()); valider() }
   const repondreFaux = () => { taper(attendu() + 1); valider() }
-  return { ctx, ecran, q, taper, valider, attendu, repondreJuste, repondreFaux, cache: () => cache(), desabonner }
+  return { ctx, ecran, q, taper, valider, attendu, repondreJuste, repondreFaux, cache: () => cache(), visible: () => visible(), avancerHorloge: (ms: number) => { t += ms }, desabonner }
 }
 
 afterEach(() => { document.body.replaceChildren() })
@@ -107,7 +111,7 @@ describe('rendreJeu', () => {
     try {
       const ctx = ctxDe()
       const ecran = rendreJeu(ctx, 'mul-1', 1, {
-        horloge: { now: () => 0 }, visibilite: { onCache: () => () => {} }, rng: createRng(1), delaiFeedbackMs: 400,
+        horloge: { now: () => 0 }, visibilite: { onCache: () => () => {}, onVisible: () => () => {} }, rng: createRng(1), delaiFeedbackMs: 400,
       })
       const touche = (c: string) => ecran.element.querySelector<HTMLButtonElement>(`button.touche[data-touche="${c}"]`)!
       for (const c of String(reponseAttendue(calculCourant(ecran.session())))) touche(c).click()
@@ -145,11 +149,15 @@ describe('rendreJeu', () => {
     expect(j.ecran.session().reponses).toHaveLength(1)
   })
 
-  it('le chrono repart après une interruption', () => {
-    const j = monter({ pas: 1000 })
+  it('le chrono repart au retour de visibilité, pas avant la mise en arrière-plan', () => {
+    const j = monter()
+    j.avancerHorloge(50000)
     j.cache()
+    j.avancerHorloge(100000)
+    j.visible()
+    j.avancerHorloge(2000)
     j.repondreJuste()
-    expect(j.ecran.session().reponses[0]!.tempsMs).toBeLessThan(5000)
+    expect(j.ecran.session().reponses[0]!.tempsMs).toBe(2000)
   })
 
   it('Accueil à mi-série : rien sauvé, navigue, désabonne', () => {
@@ -199,8 +207,9 @@ describe('rendreJeu', () => {
     for (let i = 0; i < 10; i++) j.repondreJuste()
     const txt = j.ecran.element.textContent!
     expect(txt).toContain('10 sur 10')
-    expect(txt).toContain('Bravo, presque ! Un peu plus vite la prochaine fois (objectif')
-    expect(txt).toContain('toi 20,0 s)')
+    const cible = j.ecran.session().cibleMs
+    const objectif = cible % 1000 === 0 ? `${cible / 1000} s` : `${(cible / 1000).toFixed(1).replace('.', ',')} s`
+    expect(txt).toContain(`Bravo, presque ! Un peu plus vite la prochaine fois (objectif ${objectif}, toi 20,0 s).`)
     expect(j.q('[data-test="suivant"]')).toBeNull()
   })
 })

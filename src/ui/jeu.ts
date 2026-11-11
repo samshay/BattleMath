@@ -17,16 +17,22 @@ import type { ContexteApp } from './accueil'
 import { creerPave } from './pave'
 
 export interface Horloge { now(): number }
-export interface Visibilite { onCache(cb: () => void): () => void }
+export interface Visibilite { onCache(cb: () => void): () => void; onVisible(cb: () => void): () => void }
 export interface EcranJeu { element: HTMLElement; session(): Session }
 
 const horlogeParDefaut: Horloge = { now: () => performance.now() }
+function surVisibilite(cb: () => void, cache: boolean): () => void {
+  const ecouteur = (): void => { if (document.hidden === cache) cb() }
+  document.addEventListener('visibilitychange', ecouteur)
+  return () => document.removeEventListener('visibilitychange', ecouteur)
+}
 const visibiliteParDefaut: Visibilite = {
-  onCache(cb) {
-    const ecouteur = (): void => { if (document.hidden) cb() }
-    document.addEventListener('visibilitychange', ecouteur)
-    return () => document.removeEventListener('visibilitychange', ecouteur)
-  },
+  onCache: (cb) => surVisibilite(cb, true),
+  onVisible: (cb) => surVisibilite(cb, false),
+}
+
+function formaterObjectif(ms: number): string {
+  return ms % 1000 === 0 ? `${ms / 1000} s` : formaterSecondes(ms)
 }
 
 export function rendreJeu(
@@ -50,6 +56,7 @@ export function rendreJeu(
   let s = creerSession(parcours, n, cibleMs, genererSerie(parcours, n, rng, ctx.donnees.faits))
   let t0: number | null = horloge.now()
   let quitte = false
+  let interrompu = false
   let minuteur: ReturnType<typeof setTimeout> | undefined
 
   const entete = h('div', { class: 'entete' })
@@ -59,7 +66,6 @@ export function rendreJeu(
   const pave = creerPave({
     onChange(v) {
       saisieEl.textContent = v
-      if (t0 === null && v !== '') t0 = horloge.now()
     },
     onValider: valider,
   })
@@ -68,14 +74,21 @@ export function rendreJeu(
     quitte = true
     if (minuteur !== undefined) clearTimeout(minuteur)
     desabonner()
+    desabonnerVisible()
     window.removeEventListener('hashchange', quitter)
   }
   const desabonner = visibilite.onCache(() => {
     if (quitte || s.phase !== 'question') return
     s = annulerCourant(s, genererSerie(parcours, n, rng, ctx.donnees.faits)[0]!)
     t0 = null
+    interrompu = true
     pave.vider()
     dessiner()
+  })
+  const desabonnerVisible = visibilite.onVisible(() => {
+    if (quitte || !interrompu) return
+    interrompu = false
+    if (s.phase === 'question') { t0 = horloge.now(); dessiner() }
   })
   window.addEventListener('hashchange', quitter, { once: true })
 
@@ -141,12 +154,12 @@ export function rendreJeu(
     const b = bilan(s)
     const verdict = b.raison === 'validee' ? 'Niveau validé !'
       : b.raison === 'trop_lent'
-        ? `Bravo, presque ! Un peu plus vite la prochaine fois (objectif ${formaterSecondes(s.cibleMs)}, toi ${formaterSecondes(b.tempsMedian)}).`
+        ? `Bravo, presque ! Un peu plus vite la prochaine fois (objectif ${formaterObjectif(s.cibleMs)}, toi ${formaterSecondes(b.tempsMedian)}).`
         : 'Il faut 9 bonnes réponses. Encore un essai ?'
     const suivantOuvert = n < 8 && etatNiveau(donnees.series, parcours, n + 1) !== 'verrouille'
     racine.replaceChildren(h('div', { class: 'fin' },
       h('p', { class: 'score' }, `${b.bonnes} sur 10`),
-      h('p', { class: 'temps' }, `Ton temps : ${formaterSecondes(b.tempsMedian)} par calcul (objectif ${formaterSecondes(s.cibleMs)})`),
+      h('p', { class: 'temps' }, `Ton temps : ${formaterSecondes(b.tempsMedian)} par calcul (objectif ${formaterObjectif(s.cibleMs)})`),
       h('p', { class: `verdict ${b.raison}` }, verdict),
       h('button', {
         type: 'button', class: 'principal', 'data-test': 'rejouer',
