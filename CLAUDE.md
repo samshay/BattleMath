@@ -16,7 +16,7 @@ PWA de calcul mental pour un enfant de CE2, utilisée sur téléphone en portrai
 - `src/core/` : logique pure (types, générateurs, `levels.ts` = configuration isolée des 12 parcours × 8 niveaux, validation, progression). Aucun accès à `window`, `document`, `localStorage`, `Date.now`, `Math.random` : le hasard passe par `createRng(seed)`.
 - `src/game/session.ts` : machine à états d'une série, pure.
 - `src/storage/` : schéma versionné (`version: 2`, profils), migration, store avec stockage injecté (`StockageLike`), opérations pures sur les profils.
-- `src/ui/` : écrans en DOM vanilla via `h()` (`dom.ts`). Routes hash : `#/`, `#/jeu/<parcours>/<niveau>`, `#/parents`. Chaque écran se re-rend par `replaceChildren`.
+- `src/ui/` : écrans en DOM vanilla via `h()` (`dom.ts`). Routes hash : `#/`, `#/parcours`, `#/jeu/<parcours>/<niveau>`, `#/parents`. Chaque écran se re-rend par `replaceChildren`.
 - `src/main.ts` : câblage (localStorage, sessionStorage, partage, téléchargement, confirmation, service worker).
 
 ## Règles du projet

@@ -6,9 +6,9 @@ import type { StockageLike } from './storage/store'
 import { profilActif } from './storage/schema'
 import type { Donnees } from './storage/schema'
 import { h } from './ui/dom'
-import { rendreAccueil, selectionDepuisProfil } from './ui/accueil'
+import { rendreAccueil } from './ui/accueil'
 import type { ContexteApp } from './ui/accueil'
-import { rendreParcours } from './ui/parcours'
+import { rendreParcours, selectionDepuisProfil } from './ui/parcours'
 import { rendreJeu } from './ui/jeu'
 import { creerVerrouSession, rendreParents } from './ui/parents'
 import { demarrerRouteur, versHash } from './ui/router'
@@ -72,7 +72,6 @@ function afficher(route: Route): void {
   detruireEcran = null
   let jeu: ReturnType<typeof rendreJeu> | null = null
   if (route.nom === 'jeu') { jeu = rendreJeu(ctx, route.parcours, route.niveau); detruireEcran = jeu.detruire }
-  if (route.nom === 'parcours') Object.assign(ctx.selection, selectionDepuisProfil(profilActif(ctx.donnees)))
   app.replaceChildren(
     route.nom === 'accueil' ? rendreAccueil(ctx)
       : route.nom === 'parcours' ? rendreParcours(ctx)

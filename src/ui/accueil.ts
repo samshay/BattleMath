@@ -1,11 +1,11 @@
-import { decomposerParcours } from '../core/types'
 import type { ParcoursOp, Taille } from '../core/types'
 import type { Chargement } from '../storage/store'
 import { profilActif } from '../storage/schema'
-import type { Donnees, Profil } from '../storage/schema'
+import type { Donnees } from '../storage/schema'
 import { choisirProfil } from '../storage/profils'
 import { h } from './dom'
 import { rangeeProfils } from './profils'
+import { selectionDepuisProfil } from './parcours'
 import { bannierInstallation, detecterPlateforme, estStandalone } from './installation'
 import type { Route } from './router'
 
@@ -32,31 +32,27 @@ function memoriserFermeture(): void {
   try { window.localStorage.setItem(CLE_BANNIERE, '1') } catch { /* stockage bloqué : bannière réaffichée */ }
 }
 
-/** Parcours affiché à l'ouverture d'un profil : son dernier parcours, sinon additions à 1 chiffre. */
-export function selectionDepuisProfil(p: Profil): { op: ParcoursOp; taille: Taille } {
-  const s = p.dernierParcours ? decomposerParcours(p.dernierParcours) : { op: 'add' as const, taille: 1 as const }
-  return s.taille === 3 && !p.reglages.parcoursAvances ? { op: s.op, taille: 1 } : s
-}
-
 export function rendreAccueil(ctx: ContexteApp): HTMLElement {
   const racine = h('div', { class: 'accueil' })
   const { plateforme, dejaInstallee } = detecterPlateforme(navigator.userAgent, estStandalone())
   let fermee = banniereDejaFermee()
   const actif = profilActif(ctx.donnees)
-  const enfants: (Node | null)[] = []
+  const enfants: Node[] = []
 
   if (ctx.avertissement) enfants.push(h('p', { class: 'avertissement' }, AVERTISSEMENTS[ctx.avertissement]))
-  if (!fermee) enfants.push(bannierInstallation(dejaInstallee, plateforme, () => { fermee = true; memoriserFermeture() }))
+  const banniere = fermee ? null : bannierInstallation(dejaInstallee, plateforme, () => { fermee = true; memoriserFermeture() })
+  if (banniere) enfants.push(banniere)
 
   enfants.push(h('header', {}, h('h1', {}, 'BattleMath')))
   enfants.push(h('h2', {}, 'Qui joue ?'))
   const rangee = rangeeProfils(ctx.donnees.profils, actif.id, (id) => {
     if (id !== actif.id) ctx.sauver(choisirProfil(ctx.donnees, id))
+    Object.assign(ctx.selection, selectionDepuisProfil(profilActif(ctx.donnees)))
     ctx.naviguer({ nom: 'parcours' })
   })
   rangee.classList.add('grand')
   enfants.push(rangee)
   enfants.push(h('a', { class: 'parents', href: '#/parents' }, 'Parents'))
-  racine.replaceChildren(...enfants.filter((e): e is Node => e !== null))
+  racine.replaceChildren(...enfants)
   return racine
 }

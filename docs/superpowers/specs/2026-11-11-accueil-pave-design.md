@@ -20,8 +20,8 @@ Date : 2026-11-11. Demande de l'utilisateur pendant le test par son fils.
   lien « Changer de joueur » vers `#/`.
 - Bouton Continuer, boutons d'opération, boutons de taille, grille des
   8 niveaux : exactement le contenu actuel de l'accueil, pour le profil actif.
-- `ctx.selection` initialisée depuis le profil actif à l'arrivée sur la page
-  (via `selectionDepuisProfil`).
+- `ctx.selection` réinitialisée depuis le profil choisi (via `selectionDepuisProfil`)
+  au tap sur une pastille de la page 1, pas à chaque arrivée sur la page 2.
 - Si aucun profil actif n'est résoluble (impossible avec des données
   validées), retour à `#/`.
 

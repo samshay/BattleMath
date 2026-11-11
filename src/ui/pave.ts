@@ -8,6 +8,7 @@ export interface Pave {
   setActif(actif: boolean): void
 }
 
+const CLASSE_LARGEUR: Record<string, string> = { '0': ' large', valider: ' pleine' }
 const DISPOSITION = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'effacer', 'valider']
 
 export function creerPave(opts: {
@@ -49,7 +50,7 @@ export function creerPave(opts: {
     const onclick = t === 'effacer' ? effacer
       : t === 'valider' ? () => { if (actif && valeur !== '') opts.onValider(Number(valeur)) }
       : () => taper(t)
-    const b = h('button', { type: 'button', class: `touche touche-${t}${t === '0' ? ' large' : t === 'valider' ? ' pleine' : ''}`, 'data-touche': t, onclick }, texte)
+    const b = h('button', { type: 'button', class: `touche touche-${t}${CLASSE_LARGEUR[t] ?? ''}`, 'data-touche': t, onclick }, texte)
     if (t === 'effacer') b.setAttribute('aria-label', 'Effacer')
     boutons.set(t, b)
   }

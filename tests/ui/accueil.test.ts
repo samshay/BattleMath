@@ -45,6 +45,12 @@ describe('rendreAccueil (page 1)', () => {
     expect(ctx.naviguer).toHaveBeenCalledWith({ nom: 'parcours' })
   })
 
+  it('clic sur une pastille : ctx.selection reprise du profil choisi', () => {
+    const ctx = ctxDe(deuxProfils({}, { dernierParcours: 'mul-2' }))
+    rendreAccueil(ctx).querySelector<HTMLButtonElement>('button.profil[data-id="p2"]')!.click()
+    expect(ctx.selection).toEqual({ op: 'mul', taille: 2 })
+  })
+
   it('pastille déjà active : navigue sans sauver', () => {
     const ctx = ctxDe(deuxProfils())
     rendreAccueil(ctx).querySelector<HTMLButtonElement>('button.profil[data-id="p1"]')!.click()

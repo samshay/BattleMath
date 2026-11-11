@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { describe, expect, it, vi } from 'vitest'
-import { rendreParcours } from '../../src/ui/parcours'
+import { rendreParcours, selectionDepuisProfil } from '../../src/ui/parcours'
 import type { ContexteApp } from '../../src/ui/accueil'
 import { donneesVides, profilActif } from '../../src/storage/schema'
 import type { Donnees } from '../../src/storage/schema'
@@ -88,5 +88,27 @@ describe('rendreParcours', () => {
     racine.querySelector<HTMLButtonElement>('button.taille[data-taille="2"]')!.click()
     expect(ctx.selection.taille).toBe(2)
     expect(racine.querySelectorAll('button.niveau')).toHaveLength(8)
+  })
+})
+
+describe('selectionDepuisProfil', () => {
+  it('sans dernier parcours : additions à 1 chiffre', () => {
+    expect(selectionDepuisProfil(profilActif(avecProfil({})))).toEqual({ op: 'add', taille: 1 })
+  })
+  it('avec dernier parcours : celui-ci', () => {
+    expect(selectionDepuisProfil(profilActif(avecProfil({ dernierParcours: 'mul-2' })))).toEqual({ op: 'mul', taille: 2 })
+  })
+  it('3 chiffres sans parcours avancés : replié sur 1 chiffre', () => {
+    const p = profilActif(avecProfil({ dernierParcours: 'add-3', reglages: { parcoursAvances: false, vitesse: 'normal' } }))
+    expect(selectionDepuisProfil(p).taille).toBe(1)
+  })
+})
+
+describe('rendreParcours et ctx.selection', () => {
+  it('le rendu ne touche pas à la sélection (hors repli taille 3)', () => {
+    const ctx = ctxDe(avecProfil({ dernierParcours: 'add-1' }))
+    ctx.selection = { op: 'mul', taille: 2 }
+    rendreParcours(ctx)
+    expect(ctx.selection).toEqual({ op: 'mul', taille: 2 })
   })
 })

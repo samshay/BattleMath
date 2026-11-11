@@ -1,13 +1,20 @@
-import { parcoursId } from '../core/types'
-import type { Taille } from '../core/types'
+import { decomposerParcours, parcoursId } from '../core/types'
+import type { ParcoursOp, Taille } from '../core/types'
 import { etatsParcours, parcoursVisibles, prochainNiveau, totalEtoiles } from '../core/progression'
 import { COULEURS, profilActif } from '../storage/schema'
+import type { Profil } from '../storage/schema'
 import { nomParcours } from '../core/format'
 import { h } from './dom'
 import type { ContexteApp } from './accueil'
 
-const OPERATIONS: ['add' | 'sub' | 'mul' | 'mix', string][] = [['add', 'Additions'], ['sub', 'Soustractions'], ['mul', 'Multiplications'], ['mix', 'Mixte']]
+const OPERATIONS: [ParcoursOp, string][] = [['add', 'Additions'], ['sub', 'Soustractions'], ['mul', 'Multiplications'], ['mix', 'Mixte']]
 const ETOILES = { verrouille: '', ouvert: '', reussi: '★', valide: '★★' }
+
+/** Parcours affiché à l'ouverture d'un profil : son dernier parcours, sinon additions à 1 chiffre. */
+export function selectionDepuisProfil(p: Profil): { op: ParcoursOp; taille: Taille } {
+  const s = p.dernierParcours ? decomposerParcours(p.dernierParcours) : { op: 'add' as const, taille: 1 as const }
+  return s.taille === 3 && !p.reglages.parcoursAvances ? { op: s.op, taille: 1 } : s
+}
 
 export function rendreParcours(ctx: ContexteApp): HTMLElement {
   const racine = h('div', { class: 'accueil parcours' })
