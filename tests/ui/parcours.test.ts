@@ -41,7 +41,11 @@ describe('rendreParcours', () => {
     const header = racine.querySelector('header')!
     expect(header.querySelector('.pastille-couleur')).not.toBeNull()
     expect(header.textContent).toContain(profilActif(d).prenom)
-    expect(header.textContent).toContain('★ 2')
+    const etoiles = header.querySelector('.etoiles')!
+    expect(etoiles.textContent!.trim()).toBe('2')
+    expect(etoiles.getAttribute('aria-label')).toBe('2 étoiles')
+    expect(etoiles.querySelector('.icone-etoile')).not.toBeNull()
+    expect(racine.querySelector('a[href="#/"] .icone-joueur')).not.toBeNull()
     expect(racine.querySelector('a[href="#/"]')!.textContent).toBe('Changer de joueur')
     expect(racine.querySelector('button.profil')).toBeNull()
   })
@@ -130,5 +134,35 @@ describe('rendreParcours et ctx.selection', () => {
   it('record : absent si la série n\'est pas réussie', () => {
     const d = avecProfil({ series: [{ ...serieValidee('add-1', 1), bonnes: 5, reussie: false, validee: false }] })
     expect(rendreParcours(ctxDe(d)).querySelector('span.record')).toBeNull()
+  })
+
+  it('continuer : icône, deux lignes, texte complet', () => {
+    const d = avecProfil({ dernierParcours: 'mul-1', series: [serieValidee('mul-1', 1)] })
+    const b = rendreParcours(ctxDe(d)).querySelector('[data-test="continuer"]')!
+    expect(b.querySelector('.icone-continuer')).not.toBeNull()
+    expect(b.querySelector('.titre')!.textContent).toBe('Continuer')
+    expect(b.querySelector('.detail')!.textContent).toBe('Multiplications 1 chiffre niveau 2')
+  })
+
+  it('opérations : pastille avec le signe, sélection par aria-pressed', () => {
+    const racine = rendreParcours(ctxDe())
+    expect(racine.querySelector('button.op[data-op="sub"] .pastille-op .icone-op-sub')).not.toBeNull()
+    expect(racine.querySelector('button.op[data-op="add"]')!.getAttribute('aria-pressed')).toBe('true')
+    expect(racine.querySelector('button.op[data-op="sub"]')!.getAttribute('aria-pressed')).toBe('false')
+    expect(racine.querySelector('button.taille[data-taille="1"]')!.getAttribute('aria-pressed')).toBe('true')
+  })
+
+  it('tuiles : cadenas si verrouillé, 1 ou 2 étoiles SVG, « Niveau N » conservé en texte', () => {
+    const d = avecProfil({ series: [serieValidee('add-1', 1), { ...serieValidee('add-1', 2), tempsMedian: 9000, validee: false }] })
+    const racine = rendreParcours(ctxDe(d))
+    const t = (n: number) => racine.querySelector(`button.niveau[data-niveau="${n}"]`)!
+    expect(t(1).querySelectorAll('.marque .icone-etoile')).toHaveLength(2)
+    expect(t(1).querySelector('.marque')!.getAttribute('aria-label')).toBe('deux étoiles')
+    expect(t(2).querySelectorAll('.marque .icone-etoile')).toHaveLength(1)
+    expect(t(3).querySelector('.marque')).toBeNull()
+    expect(t(4).querySelector('.icone-verrou')).not.toBeNull()
+    expect(t(1).querySelector('.icone-verrou')).toBeNull()
+    expect(t(1).querySelector('.numero')!.textContent).toBe('Niveau 1')
+    expect(racine.textContent).not.toContain('★')
   })
 })
