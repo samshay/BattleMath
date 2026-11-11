@@ -28,4 +28,9 @@ Le dépôt doit s'appeler `BattleMath` (l'application est servie sous `/BattleMa
 
 ## Données
 
-Tout reste sur le téléphone (aucun serveur, aucun compte). L'export et l'import des données se font depuis l'écran Parents.
+Tout reste sur le téléphone (aucun serveur, aucun compte).
+
+- **Profils** : le choix du joueur se fait sur l'accueil, par pastilles (couleur + prénom). La gestion se fait dans l'écran Parents : prénom, couleur, ajout et suppression, jusqu'à 4 profils.
+- **Réglages par profil** : vitesse et parcours avancés sont propres à chaque profil, tout comme la progression.
+- **Migration** : les données existantes (version 1) sont migrées automatiquement dans un premier profil « Enfant ».
+- **Export / import** : global, tous profils confondus, depuis l'écran Parents.
