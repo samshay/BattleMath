@@ -55,7 +55,7 @@ button:disabled { opacity: 0.4; }
 .profils.grand .profil { width: 100%; min-height: 64px; font-size: 1.5rem; }
 .accueil h2 { margin: 0; font-size: 1.25rem; }
 .accueil .joueur { display: flex; align-items: center; gap: 8px; font-size: 1.25rem; font-weight: bold; }
-.accueil .changer { align-self: flex-start; }
+.accueil .changer { display: flex; align-items: center; min-height: 56px; color: var(--primaire); }
 .profils { display: flex; flex-wrap: wrap; gap: 8px; }
 .profil { border-width: 3px; border-color: var(--bord); min-height: 56px; display: flex; align-items: center; gap: 8px; flex: 0 0 auto; white-space: nowrap; }
 .pastille-couleur { width: 24px; height: 24px; border-radius: 50%; flex: 0 0 auto; }
