@@ -1,4 +1,5 @@
 import './style.css'
+import { registerSW } from 'virtual:pwa-register'
 import { decomposerParcours } from './core/types'
 import { createRng } from './core/rng'
 import { charger, sauver } from './storage/store'
@@ -78,3 +79,5 @@ function afficher(route: Route): void {
 }
 
 demarrerRouteur(afficher)
+
+registerSW({ immediate: true })
