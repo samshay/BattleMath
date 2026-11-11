@@ -15,7 +15,7 @@ function ctxDe(donnees: Donnees = donneesVides()): ContexteApp {
   return { donnees, avertissement: null, sauver: vi.fn(), naviguer: vi.fn(), selection: { op: 'add', taille: 1 } }
 }
 
-function monter(opts: { parcours?: ParcoursId; n?: number; donnees?: Donnees; pas?: number } = {}) {
+function monter(opts: { parcours?: ParcoursId; n?: number; donnees?: Donnees; pas?: number; seed?: number } = {}) {
   const ctx = ctxDe(opts.donnees)
   let t = 0
   const pas = opts.pas ?? 0
@@ -27,7 +27,7 @@ function monter(opts: { parcours?: ParcoursId; n?: number; donnees?: Donnees; pa
     onVisible: (cb) => { visible = cb; return desabonner },
   }
   const ecran = rendreJeu(ctx, opts.parcours ?? 'mul-1', opts.n ?? 1, {
-    horloge: { now: () => (t += pas), }, visibilite, rng: createRng(1), delaiFeedbackMs: 0,
+    horloge: { now: () => (t += pas), }, visibilite, rng: createRng(opts.seed ?? 1), delaiFeedbackMs: 0,
   })
   document.body.replaceChildren(ecran.element)
   const q = <T extends Element = HTMLElement>(sel: string) => ecran.element.querySelector<T>(sel)
@@ -154,6 +154,40 @@ describe('rendreJeu', () => {
     } finally {
       vi.useRealTimers()
     }
+  })
+
+  describe('réponse 0', () => {
+    function avecZeroEnPremier() {
+      for (let seed = 1; seed < 500; seed++) {
+        const j = monter({ parcours: 'sub-1', n: 2, donnees: debloque(), seed })
+        if (j.attendu() === 0) return j
+        document.body.replaceChildren()
+      }
+      throw new Error('aucune graine avec un premier calcul de résultat 0')
+    }
+    function debloque(): Donnees {
+      const d = donneesVides()
+      d.series = [{ date: '2026-11-11T10:00:00.000Z', parcours: 'sub-1', niveau: 1, bonnes: 10, tempsMedian: 1, tempsCible: 4, reussie: true, validee: true }]
+      return d
+    }
+
+    it('0 direct : compté juste', () => {
+      const j = avecZeroEnPremier()
+      j.repondreJuste()
+      expect(j.ecran.session().reponses[0]).toMatchObject({ reponse: 0, juste: true })
+      expect(j.ecran.session().index).toBe(1)
+    })
+
+    it('faux puis 0 recopié : on avance', () => {
+      const j = avecZeroEnPremier()
+      j.taper(3)
+      j.valider()
+      expect(j.q('.attendu')!.textContent).toContain('0')
+      j.taper(0)
+      j.valider()
+      expect(j.ecran.session().index).toBe(1)
+      expect(j.q('.attendu')).toBeNull()
+    })
   })
 
   it('onCache en phase question : nouveau calcul, aucune réponse ajoutée', () => {

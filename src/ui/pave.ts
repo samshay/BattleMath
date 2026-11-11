@@ -30,7 +30,12 @@ export function creerPave(opts: {
     opts.onChange(valeur)
   }
   function taper(chiffre: string): void {
-    if (!actif || valeur.length >= max || (valeur === '' && chiffre === '0')) return
+    if (!actif) return
+    if (valeur === '0') {
+      if (chiffre !== '0') changer(chiffre)
+      return
+    }
+    if (valeur.length >= max) return
     changer(valeur + chiffre)
   }
   function effacer(): void {

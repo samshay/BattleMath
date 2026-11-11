@@ -32,12 +32,24 @@ describe('creerPave', () => {
     expect(pave.valeur()).toBe('12')
   })
 
-  it('un 0 initial est ignoré (pas de zéro non significatif)', () => {
+  it('0 sur valeur vide donne 0, jamais de zéro non significatif', () => {
     const { pave, taper } = monter()
     taper('0')
-    expect(pave.valeur()).toBe('')
-    taper('5', '0')
-    expect(pave.valeur()).toBe('50')
+    expect(pave.valeur()).toBe('0')
+    taper('0')
+    expect(pave.valeur()).toBe('0')
+    taper('7')
+    expect(pave.valeur()).toBe('7')
+    taper('0')
+    expect(pave.valeur()).toBe('70')
+  })
+
+  it('Valider avec 0 appelle onValider(0)', () => {
+    const { taper, touche, onValider } = monter()
+    taper('0')
+    expect(touche('valider').disabled).toBe(false)
+    touche('valider').click()
+    expect(onValider).toHaveBeenCalledWith(0)
   })
 
   it('le 5e chiffre est ignoré', () => {
