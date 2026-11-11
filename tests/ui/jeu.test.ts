@@ -128,6 +128,34 @@ describe('rendreJeu', () => {
     }
   })
 
+  it('interruption pendant le feedback : le chrono du calcul suivant démarre au retour', () => {
+    vi.useFakeTimers()
+    try {
+      const ctx = ctxDe()
+      let t = 0
+      let cache: () => void = () => {}
+      let visible: () => void = () => {}
+      const ecran = rendreJeu(ctx, 'mul-1', 1, {
+        horloge: { now: () => t }, rng: createRng(1), delaiFeedbackMs: 400,
+        visibilite: { onCache: (cb) => { cache = cb; return () => {} }, onVisible: (cb) => { visible = cb; return () => {} } },
+      })
+      const touche = (c: string) => ecran.element.querySelector<HTMLButtonElement>(`button.touche[data-touche="${c}"]`)!
+      for (const c of String(reponseAttendue(calculCourant(ecran.session())))) touche(c).click()
+      touche('valider').click()
+      cache()
+      vi.advanceTimersByTime(400)
+      expect(ecran.session().index).toBe(1)
+      t += 100000
+      visible()
+      t += 2000
+      for (const c of String(reponseAttendue(calculCourant(ecran.session())))) touche(c).click()
+      touche('valider').click()
+      expect(ecran.session().reponses[1]!.tempsMs).toBe(2000)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('onCache en phase question : nouveau calcul, aucune réponse ajoutée', () => {
     const j = monter()
     const avant = j.q('.calcul')!.textContent

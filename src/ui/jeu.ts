@@ -23,8 +23,15 @@ export interface EcranJeu { element: HTMLElement; session(): Session }
 const horlogeParDefaut: Horloge = { now: () => performance.now() }
 function surVisibilite(cb: () => void, cache: boolean): () => void {
   const ecouteur = (): void => { if (document.hidden === cache) cb() }
+  const direct = (): void => cb()
+  // pagehide / pageshow : certains Safari iOS ne déclenchent que ceux-là au changement d'app.
+  const evtPage = cache ? 'pagehide' : 'pageshow'
   document.addEventListener('visibilitychange', ecouteur)
-  return () => document.removeEventListener('visibilitychange', ecouteur)
+  window.addEventListener(evtPage, direct)
+  return () => {
+    document.removeEventListener('visibilitychange', ecouteur)
+    window.removeEventListener(evtPage, direct)
+  }
 }
 const visibiliteParDefaut: Visibilite = {
   onCache: (cb) => surVisibilite(cb, true),
@@ -57,6 +64,7 @@ export function rendreJeu(
   let t0: number | null = horloge.now()
   let quitte = false
   let interrompu = false
+  let cache = false
   let minuteur: ReturnType<typeof setTimeout> | undefined
 
   const entete = h('div', { class: 'entete' })
@@ -78,7 +86,9 @@ export function rendreJeu(
     window.removeEventListener('hashchange', quitter)
   }
   const desabonner = visibilite.onCache(() => {
-    if (quitte || s.phase !== 'question') return
+    if (quitte) return
+    cache = true
+    if (s.phase !== 'question') return
     s = annulerCourant(s, genererSerie(parcours, n, rng, ctx.donnees.faits)[0]!)
     t0 = null
     interrompu = true
@@ -86,6 +96,7 @@ export function rendreJeu(
     dessiner()
   })
   const desabonnerVisible = visibilite.onVisible(() => {
+    cache = false
     if (quitte || !interrompu) return
     interrompu = false
     if (s.phase === 'question') { t0 = horloge.now(); dessiner() }
@@ -122,7 +133,10 @@ export function rendreJeu(
     if (s.phase === 'fini') return terminer()
     pave.vider()
     pave.setActif(true)
-    if (s.phase === 'question') t0 = horloge.now()
+    if (s.phase === 'question') {
+      t0 = cache ? null : horloge.now()
+      interrompu = cache
+    }
     dessiner()
   }
 
