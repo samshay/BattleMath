@@ -260,7 +260,7 @@ b ∈ 1-9)
 ## 4. Interface (tactile, téléphone en portrait)
 
 Ton encourageant, textes courts, lisibles par un enfant de 8 ans.
-Mode sombre géré (préférence système). Pas de zoom au double-tap, pas de
+Mode sombre géré (préférence système). Remplacé depuis la spec « Thème spatial » (2026-11-11) par un thème sombre unique. Pas de zoom au double-tap, pas de
 sélection de texte, pas de clavier système : le pavé est dans la page.
 
 ### 4.1 Accueil

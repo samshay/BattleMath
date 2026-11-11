@@ -62,6 +62,8 @@ serveur. Demande de l'utilisateur le 2026-11-11, hors périmètre v1.
 `rose #d6336c`, `turquoise #0c8599`. Même valeur en clair et en sombre ;
 la pastille affiche un disque de couleur plus le prénom en texte normal.
 
+Valeurs remplacées par celles de la spec « Thème spatial » (2026-11-11) ; mêmes clés.
+
 ## 3. Données
 
 ### 3.1 Schéma version 2

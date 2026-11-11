@@ -12,6 +12,7 @@ PWA de calcul mental pour un enfant de CE2, utilisée sur téléphone en portrai
 - Spec profils : `docs/superpowers/specs/2026-11-11-profils-design.md`.
 - Accueil en deux pages et pavé : `docs/superpowers/specs/2026-11-11-accueil-pave-design.md`.
 - Record par niveau : `docs/superpowers/specs/2026-11-11-record-design.md`.
+- Thème spatial (couleurs, polices, icônes) : `docs/superpowers/specs/2026-11-11-theme-spatial-design.md`.
 - Plans d'implémentation : `docs/superpowers/plans/`.
 
 ## Déploiement
@@ -23,6 +24,7 @@ PWA de calcul mental pour un enfant de CE2, utilisée sur téléphone en portrai
 - `src/game/session.ts` : machine à états d'une série, pure.
 - `src/storage/` : schéma versionné (`version: 2`, profils), migration, store avec stockage injecté (`StockageLike`), opérations pures sur les profils.
 - `src/ui/` : écrans en DOM vanilla via `h()` (`dom.ts`). Routes hash : `#/`, `#/parcours`, `#/jeu/<parcours>/<niveau>`, `#/parents`. Chaque écran se re-rend par `replaceChildren`.
+- `src/assets/` : SVG importés en chaîne via `?raw`.
 - `src/main.ts` : câblage (localStorage, sessionStorage, partage, téléchargement, confirmation, service worker).
 
 ## Règles du projet
@@ -33,6 +35,7 @@ PWA de calcul mental pour un enfant de CE2, utilisée sur téléphone en portrai
 - Seul l'accueil (page « Qui joue ? ») change le profil actif ; l'écran Parents consulte un profil sans le rendre actif. La sélection opération/taille est réinitialisée au choix du joueur, pas à chaque retour sur la page de parcours.
 - Record d'un niveau = plus petit `tempsTotal` (somme des 10 réponses) parmi les séries **validées** ; la validation et les graphiques restent sur le temps médian. Les séries anciennes sans `tempsTotal` sont ignorées.
 - Un niveau est validé si ≥ 9/10 et médiane ≤ cible effective (vitesse du profil) ; « réussi » = 9/10 sans le temps. Seule la validation débloque le niveau suivant.
+- Couleurs uniquement dans `:root` (`src/style.css`) et `COULEURS` ; icônes et illustrations via `icone()`/`illustration()` de `src/ui/icones.ts`, toujours `aria-hidden`, le sens passe par le texte ou un `aria-label`.
 - Les tests UI utilisent `// @vitest-environment happy-dom` en tête de fichier et les fixtures de `tests/aide/donnees.ts`. Les sélecteurs de test sont des attributs `data-test`.
 - TDD : test d'abord, puis implémentation ; tout nouveau comportement a un test qui échouerait sans lui.
 - Pousser sur `main` uniquement après tests et build verts et relecture ; ne jamais créer d'autre dépôt distant sans demande explicite.
