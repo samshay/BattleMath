@@ -16,6 +16,12 @@ export function etatNiveau(series: readonly Serie[], parcours: ParcoursId, n: nu
   return 'verrouille'
 }
 
+/** Plus petit temps médian parmi les séries réussies d'un niveau, null s'il n'y en a pas. */
+export function record(series: readonly Serie[], parcours: ParcoursId, niveau: number): number | null {
+  const temps = series.filter((s) => s.reussie && s.parcours === parcours && s.niveau === niveau).map((s) => s.tempsMedian)
+  return temps.length === 0 ? null : Math.min(...temps)
+}
+
 export function etatsParcours(series: readonly Serie[], parcours: ParcoursId): EtatNiveau[] {
   return Array.from({ length: NB_NIVEAUX }, (_, i) => etatNiveau(series, parcours, i + 1))
 }

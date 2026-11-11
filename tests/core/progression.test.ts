@@ -9,6 +9,7 @@ import {
   niveauxARetravailler,
   parcoursVisibles,
   prochainNiveau,
+  record,
   synthese,
   totalEtoiles,
 } from '../../src/core/progression'
@@ -150,5 +151,26 @@ describe('etatFait', () => {
     expect(etatFait(f, 'z')).toBe('jamais_vu')
     expect(etatFait(f, 'c')).toBe('en_cours')
     expect(etatFait(f, 'm')).toBe('maitrise')
+  })
+})
+
+describe('record', () => {
+  it('aucune série : null', () => {
+    expect(record([], 'add-1', 1)).toBeNull()
+  })
+
+  it('ignore les séries non réussies, même rapides', () => {
+    expect(record([serie('add-1', 1, 8, 1000, 5000)], 'add-1', 1)).toBeNull()
+  })
+
+  it('plus petit tempsMedian parmi les réussies', () => {
+    const series = [serie('add-1', 1, 10, 4000, 5000), serie('add-1', 1, 9, 3200, 5000), serie('add-1', 1, 7, 900, 5000)]
+    expect(record(series, 'add-1', 1)).toBe(3200)
+  })
+
+  it('filtre par parcours et par niveau', () => {
+    const series = [serie('add-1', 2, 10, 1000, 5000), serie('sub-1', 1, 10, 1000, 5000), serie('add-1', 1, 10, 4500, 5000)]
+    expect(record(series, 'add-1', 1)).toBe(4500)
+    expect(record(series, 'mul-1', 1)).toBeNull()
   })
 })
