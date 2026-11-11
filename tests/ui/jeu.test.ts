@@ -319,7 +319,7 @@ describe('rendreJeu', () => {
 
   describe('record', () => {
     const ancienne = (tempsMedian: number, reussie = true) => avecProfil({ series: [{
-      date: '2026-11-10T10:00:00.000Z', parcours: 'mul-1', niveau: 1, bonnes: reussie ? 10 : 5, tempsMedian, tempsCible: 99999, reussie, validee: false,
+      date: '2026-11-10T10:00:00.000Z', parcours: 'mul-1', niveau: 1, bonnes: reussie ? 10 : 5, tempsMedian, tempsCible: 99999, reussie, validee: reussie,
     }] })
 
     it('premier record du niveau', () => {
@@ -354,6 +354,13 @@ describe('rendreJeu', () => {
       const el = j.q('[data-test="record"]')!
       expect(el.textContent).toBe('Record : 5,1 s')
       expect(el.classList.contains('record-battu')).toBe(false)
+    })
+
+    it('10/10 trop lent : série réussie mais non validée, pas de record', () => {
+      const j = monter({ pas: 20000 })
+      for (let i = 0; i < 10; i++) j.repondreJuste()
+      expect(j.ecran.element.textContent).toContain('Bravo, presque !')
+      expect(j.q('[data-test="record"]')).toBeNull()
     })
 
     it('série non réussie : pas de record', () => {

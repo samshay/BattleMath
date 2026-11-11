@@ -4,16 +4,16 @@ Date : 2026-11-11. Demande de l'utilisateur.
 
 ## Règle
 - Le **record** d'un niveau d'un parcours, pour un profil, est le plus petit
-  `tempsMedian` parmi ses séries **réussies** (bonnes ≥ 9) de ce niveau.
-  Une série à moins de 9/10 ne peut pas établir de record, quelle que soit
-  sa vitesse.
+  `tempsMedian` parmi ses séries **validées** (réussie, bonnes ≥ 9, et médiane ≤ cible)
+  de ce niveau. Une série à moins de 9/10, ou réussie mais trop lente (le
+  niveau n'est pas fini), ne peut pas établir de record.
 - Aucune donnée nouvelle : le record est dérivé des séries (`src/core/progression.ts`).
 
 ## Affichage
 - Page de parcours (`src/ui/parcours.ts`) : sous « Niveau n » et les étoiles,
   une ligne « Record 4,2 s » (`span.record`, via `formaterSecondes`) quand un
   record existe. Rien sinon.
-- Fin de série (`src/ui/jeu.ts`), après le verdict, si la série est réussie :
+- Fin de série (`src/ui/jeu.ts`), après le verdict, si la série est validée :
   - premier record du niveau : « Premier record : 4,2 s » ;
   - record battu : « Nouveau record ! 4,2 s (avant : 5,1 s) » avec une
     animation courte (`.record-battu` : pulsation et étoiles ✨ qui
@@ -22,7 +22,8 @@ Date : 2026-11-11. Demande de l'utilisateur.
   - pas battu : « Record : 5,1 s » en petit, sans animation.
   - L'ancien record est calculé sur les séries **avant** l'enregistrement de
     la série courante ; le nouveau après.
-- Série non réussie : aucune mention de record.
+- Série non validée (non réussie, ou « Bravo, presque ! » trop lente) :
+  aucune mention de record.
 
 ## API
 ```ts
@@ -31,8 +32,8 @@ export function record(series: readonly Serie[], parcours: ParcoursId, niveau: n
 ```
 
 ## Tests
-- `record` : aucune série → null ; séries non réussies ignorées ; plus petit
-  tempsMedian parmi les réussies ; filtre parcours et niveau.
+- `record` : aucune série → null ; séries non réussies et réussies-mais-non-validées ignorées ;
+  plus petit tempsMedian parmi les validées ; filtre parcours et niveau.
 - Parcours : « Record 4,2 s » affiché sur le bon niveau, absent sinon.
 - Jeu : premier record, record battu (texte avec ancien et nouveau, classe
-  `record-battu` présente), record non battu, série non réussie sans record.
+  `record-battu` présente), record non battu, série non réussie et 10/10 trop lent sans record.

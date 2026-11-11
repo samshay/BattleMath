@@ -163,7 +163,13 @@ describe('record', () => {
     expect(record([serie('add-1', 1, 8, 1000, 5000)], 'add-1', 1)).toBeNull()
   })
 
-  it('plus petit tempsMedian parmi les réussies', () => {
+  it('ignore les séries réussies mais non validées (trop lentes)', () => {
+    expect(record([serie('add-1', 1, 10, 6000, 5000)], 'add-1', 1)).toBeNull()
+    const series = [serie('add-1', 1, 10, 1000, 500), serie('add-1', 1, 10, 4000, 5000)]
+    expect(record(series, 'add-1', 1)).toBe(4000)
+  })
+
+  it('plus petit tempsMedian parmi les validées', () => {
     const series = [serie('add-1', 1, 10, 4000, 5000), serie('add-1', 1, 9, 3200, 5000), serie('add-1', 1, 7, 900, 5000)]
     expect(record(series, 'add-1', 1)).toBe(3200)
   })

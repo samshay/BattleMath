@@ -188,7 +188,7 @@ export function rendreJeu(
         ? `Bravo, presque ! Un peu plus vite la prochaine fois (objectif ${formaterObjectif(s.cibleMs)}, toi ${formaterSecondes(b.tempsMedian)}).`
         : 'Il faut 9 bonnes réponses. Encore un essai ?'
     const seriesApres = profilActif(donnees).series
-    const ligneRecord = b.reussie ? rendreRecord(record(seriesAvant, parcours, n), record(seriesApres, parcours, n)) : []
+    const ligneRecord = b.validee ? rendreRecord(record(seriesAvant, parcours, n), record(seriesApres, parcours, n)) : []
     const suivantOuvert = n < 8 && etatNiveau(profilActif(donnees).series, parcours, n + 1) !== 'verrouille'
     racine.replaceChildren(h('div', { class: 'fin' },
       h('p', { class: 'score' }, `${b.bonnes} sur 10`),
