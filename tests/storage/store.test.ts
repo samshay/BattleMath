@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
-  CLE_STOCKAGE, charger, sauver, enregistrerSerie, exporterJson, nomFichierExport, importerJson, reinitialiser,
+  CLE_STOCKAGE, charger, sauver, enregistrerSerie, exporterJson, nomFichierExport, importerJson,
 } from '../../src/storage/store'
 import type { StockageLike } from '../../src/storage/store'
 import { donneesVides, profilActif, profilVide } from '../../src/storage/schema'
@@ -111,19 +111,5 @@ describe('export / import', () => {
   it('nom de fichier', () => {
     expect(nomFichierExport(new Date(2026, 10, 11))).toBe('battlemath-2026-11-11.json')
     expect(nomFichierExport(new Date(2026, 0, 5))).toBe('battlemath-2026-01-05.json')
-  })
-})
-
-describe('reinitialiser', () => {
-  it('appelle removeItem et renvoie des données vides', () => {
-    const s = faux('{"version":1}')
-    const rem = vi.spyOn(s, 'removeItem')
-    expect(reinitialiser(s)).toEqual(donneesVides())
-    expect(rem).toHaveBeenCalledWith(CLE_STOCKAGE)
-    expect(s.m.has(CLE_STOCKAGE)).toBe(false)
-  })
-  it('tolère un stockage null ou qui throw', () => {
-    expect(reinitialiser(null)).toEqual(donneesVides())
-    expect(reinitialiser(quiThrow())).toEqual(donneesVides())
   })
 })

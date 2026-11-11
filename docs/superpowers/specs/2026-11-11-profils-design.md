@@ -134,7 +134,7 @@ la pastille affiche un disque de couleur plus le prénom en texte normal.
 - **Remise à zéro** : deux boutons dans Parents. « Effacer la progression
   de X » (profil consulté, garde le profil et ses réglages) et, en bas de
   la section Profils, « Tout effacer » (tous les profils, retour à
-  `donneesVides()`, via `reinitialiser(stockage)` existant). Chacun avec sa
+  `donneesVides()`, via `ctx.sauver(donneesVides())`). Chacun avec sa
   confirmation.
 - **Accueil, changement de profil** : `ctx.selection` est réinitialisée
   depuis le `dernierParcours` du nouveau profil (ou `add-1`) ; si la

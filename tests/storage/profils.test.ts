@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  ajouterProfil, choisirProfil, couleurLibre, majProfil, prochainNumero, profilParId, reinitialiserProfil, supprimerProfil,
+  ajouterProfil, choisirProfil, couleurLibre, majProfil, prochainNumero, profilParId, reinitialiserProfil, remplacerProfil, supprimerProfil,
 } from '../../src/storage/profils'
 import { donneesVides, profilVide } from '../../src/storage/schema'
 import type { Donnees } from '../../src/storage/schema'
@@ -126,5 +126,17 @@ describe('choisirProfil', () => {
     const d = plein()
     expect(choisirProfil(d, 'zz')).toBe(d)
     expect(choisirProfil(d, 'p3').profilActif).toBe('p3')
+  })
+})
+
+describe('remplacerProfil', () => {
+  it('applique la fonction au seul profil ciblé', () => {
+    const d = plein()
+    const r = remplacerProfil(d, 'p2', (p) => ({ ...p, prenom: 'X' }))
+    expect(r.profils.map((p) => p.prenom)).toEqual([d.profils[0]!.prenom, 'X', d.profils[2]!.prenom, d.profils[3]!.prenom])
+  })
+  it('id inconnu : données inchangées', () => {
+    const d = plein()
+    expect(remplacerProfil(d, 'zz', (p) => ({ ...p, prenom: 'X' }))).toBe(d)
   })
 })

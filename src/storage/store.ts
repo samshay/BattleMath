@@ -2,6 +2,7 @@ import type { Essai, Serie } from '../core/types'
 import { majFait } from '../core/faits'
 import { donneesVides, migrer, profilActif } from './schema'
 import type { Donnees, ResultatMigration } from './schema'
+import { remplacerProfil } from './profils'
 
 export const CLE_STOCKAGE = 'battlemath.v1'
 
@@ -56,8 +57,7 @@ export function enregistrerSerie(d: Donnees, serie: Serie, faits: readonly MajFa
   const actif = profilActif(d)
   const nouveauxFaits = { ...actif.faits }
   for (const { cle, essai } of faits) nouveauxFaits[cle] = majFait(nouveauxFaits[cle], essai)
-  const maj = { ...actif, dernierParcours: serie.parcours, series: [...actif.series, serie], faits: nouveauxFaits }
-  return { ...d, profils: d.profils.map((p) => (p.id === d.profilActif ? maj : p)) }
+  return remplacerProfil(d, actif.id, (p) => ({ ...p, dernierParcours: serie.parcours, series: [...p.series, serie], faits: nouveauxFaits }))
 }
 
 export function exporterJson(d: Donnees): string {
@@ -77,13 +77,4 @@ export function importerJson(texte: string): ResultatMigration {
     return { ok: false, erreur: 'json_invalide' }
   }
   return migrer(parsed)
-}
-
-export function reinitialiser(stockage: StockageLike | null): Donnees {
-  try {
-    stockage?.removeItem(CLE_STOCKAGE)
-  } catch {
-    // échec ignoré : les données en mémoire sont réinitialisées quoi qu'il arrive
-  }
-  return donneesVides()
 }

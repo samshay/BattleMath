@@ -5,6 +5,11 @@ export function profilParId(d: Donnees, id: string): Profil | undefined {
   return d.profils.find((p) => p.id === id)
 }
 
+export function remplacerProfil(d: Donnees, id: string, f: (p: Profil) => Profil): Donnees {
+  if (!profilParId(d, id)) return d
+  return { ...d, profils: d.profils.map((p) => (p.id === id ? f(p) : p)) }
+}
+
 export function choisirProfil(d: Donnees, id: string): Donnees {
   return profilParId(d, id) ? { ...d, profilActif: id } : d
 }
@@ -46,10 +51,9 @@ export function majProfil(
   if (!profilParId(d, id)) return d
   if (patch.prenom !== undefined && !prenomValide(patch.prenom)) return d
   const nettoye = patch.prenom !== undefined ? { ...patch, prenom: patch.prenom.trim() } : patch
-  return { ...d, profils: d.profils.map((p) => (p.id === id ? { ...p, ...nettoye } : p)) }
+  return remplacerProfil(d, id, (p) => ({ ...p, ...nettoye }))
 }
 
 export function reinitialiserProfil(d: Donnees, id: string): Donnees {
-  if (!profilParId(d, id)) return d
-  return { ...d, profils: d.profils.map((p) => (p.id === id ? { ...p, series: [], faits: {}, dernierParcours: null } : p)) }
+  return remplacerProfil(d, id, (p) => ({ ...p, series: [], faits: {}, dernierParcours: null }))
 }

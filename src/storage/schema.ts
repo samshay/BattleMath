@@ -116,7 +116,7 @@ function lireSerie(x: unknown): Serie | null {
 
 function lireReglages(x: unknown): Reglages | null {
   const defaut = REGLAGES_DEFAUT
-  if (x === undefined) return defaut
+  if (x === undefined) return { ...defaut }
   if (!estObjet(x)) return null
   const parcoursAvances = x.parcoursAvances ?? defaut.parcoursAvances
   const vitesse = x.vitesse ?? defaut.vitesse
@@ -163,7 +163,7 @@ function validerV2(brut: Obj): Donnees | null {
     const p = lireProfil(x)
     if (!p) return null
     ids.add(id)
-    profils.push({ id, prenom, couleur, ...p })
+    profils.push({ id, prenom: prenom.trim(), couleur, ...p })
   }
   if (!ids.has(brut.profilActif)) return null
   return { version: 2, profilActif: brut.profilActif, profils }

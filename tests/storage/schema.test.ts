@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest'
-import { donneesVides, estParcoursId, migrer, prenomValide, profilVide, VERSION } from '../../src/storage/schema'
+import { donneesVides, estParcoursId, migrer, prenomValide, profilActif, profilVide, VERSION } from '../../src/storage/schema'
+import type { Donnees } from '../../src/storage/schema'
 import { fixtureV1 } from '../aide/donnees'
 
 const serie = (o: object = {}) => ({
@@ -19,6 +20,15 @@ const deux = () => ({
 })
 
 describe('migrer v2', () => {
+  test('prénom importé trimé', () => {
+    const d = v2({ prenom: ' Léa ' })
+    const r = migrer(d)
+    expect(r.ok && r.donnees.profils[0]!.prenom).toBe('Léa')
+  })
+  test('profilActif : repli sur profils[0] si id inconnu', () => {
+    const d = { ...deux(), profilActif: 'zz' } as unknown as Donnees
+    expect(profilActif(d).id).toBe('p1')
+  })
   test('VERSION et estParcoursId', () => {
     expect(VERSION).toBe(2)
     expect(estParcoursId('mix-3')).toBe(true)
