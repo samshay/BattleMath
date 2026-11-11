@@ -348,6 +348,14 @@ describe('rendreJeu', () => {
       expect(el.classList.contains('record-battu')).toBe(false)
     })
 
+    it('record égalé : discret, pas de record battu', () => {
+      const j = monter({ pas: 5100, donnees: ancienne(5100) })
+      for (let i = 0; i < 10; i++) j.repondreJuste()
+      const el = j.q('[data-test="record"]')!
+      expect(el.textContent).toBe('Record : 5,1 s')
+      expect(el.classList.contains('record-battu')).toBe(false)
+    })
+
     it('série non réussie : pas de record', () => {
       const j = monter({ pas: 1000, donnees: ancienne(5100) })
       j.repondreFaux(); j.repondreJuste()

@@ -49,7 +49,7 @@ function rendreRecord(ancien: number | null, nouveau: number | null): HTMLElemen
   if (ancien === null) return [h('p', { class: 'record', 'data-test': 'record' }, `Premier record : ${formaterSecondes(nouveau)}`)]
   if (nouveau < ancien) {
     return [h('p', { class: 'record record-battu', 'data-test': 'record' },
-      h('span', { class: 'etincelles' }, '✨'), ` Nouveau record ! ${formaterSecondes(nouveau)} (avant : ${formaterSecondes(ancien)})`)]
+      h('span', { class: 'etincelles', 'aria-hidden': 'true' }, '✨'), ` Nouveau record ! ${formaterSecondes(nouveau)} (avant : ${formaterSecondes(ancien)})`)]
   }
   return [h('p', { class: 'record discret', 'data-test': 'record' }, `Record : ${formaterSecondes(ancien)}`)]
 }
@@ -187,7 +187,8 @@ export function rendreJeu(
       : b.raison === 'trop_lent'
         ? `Bravo, presque ! Un peu plus vite la prochaine fois (objectif ${formaterObjectif(s.cibleMs)}, toi ${formaterSecondes(b.tempsMedian)}).`
         : 'Il faut 9 bonnes réponses. Encore un essai ?'
-    const ligneRecord = b.reussie ? rendreRecord(record(seriesAvant, parcours, n), record(profilActif(donnees).series, parcours, n)) : []
+    const seriesApres = profilActif(donnees).series
+    const ligneRecord = b.reussie ? rendreRecord(record(seriesAvant, parcours, n), record(seriesApres, parcours, n)) : []
     const suivantOuvert = n < 8 && etatNiveau(profilActif(donnees).series, parcours, n + 1) !== 'verrouille'
     racine.replaceChildren(h('div', { class: 'fin' },
       h('p', { class: 'score' }, `${b.bonnes} sur 10`),

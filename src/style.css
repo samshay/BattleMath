@@ -131,12 +131,14 @@ button:disabled { opacity: 0.4; }
 .joueur { margin: 0; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.85rem; opacity: 0.8; }
 .joueur .pastille-couleur { width: 14px; height: 14px; }
 
-.niveau .record { font-size: 0.8rem; color: var(--texte); opacity: 0.75; }
+.niveau .record { font-size: 0.75rem; white-space: nowrap; color: var(--texte); opacity: 0.75; }
 .fin .record { margin: 0; }
 .fin .record.discret { font-size: 0.9rem; opacity: 0.7; }
+.record-battu { color: var(--succes); font-weight: bold; display: inline-block; }
+.etincelles { display: inline-block; }
 @media (prefers-reduced-motion: no-preference) {
-  .record-battu { color: var(--succes); font-weight: bold; animation: record-pulse 1.2s ease-in-out 1; }
-  .etincelles { display: inline-block; animation: etincelles-apparition 0.8s ease-out 1; }
+  .record-battu { animation: record-pulse 1.2s ease-in-out 1; }
+  .etincelles { animation: etincelles-apparition 0.8s ease-out 1; }
 }
 @keyframes record-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
 @keyframes etincelles-apparition { from { opacity: 0; } to { opacity: 1; } }

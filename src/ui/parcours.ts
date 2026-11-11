@@ -1,5 +1,5 @@
 import { decomposerParcours, parcoursId } from '../core/types'
-import type { ParcoursId, ParcoursOp, Taille } from '../core/types'
+import type { ParcoursId, Serie, ParcoursOp, Taille } from '../core/types'
 import { etatsParcours, parcoursVisibles, prochainNiveau, record, totalEtoiles } from '../core/progression'
 import { COULEURS, profilActif } from '../storage/schema'
 import type { Profil } from '../storage/schema'
@@ -16,7 +16,7 @@ export function selectionDepuisProfil(p: Profil): { op: ParcoursOp; taille: Tail
   return s.taille === 3 && !p.reglages.parcoursAvances ? { op: s.op, taille: 1 } : s
 }
 
-function recordNiveau(series: Profil['series'], parcours: ParcoursId, n: number): HTMLElement[] {
+function recordNiveau(series: readonly Serie[], parcours: ParcoursId, n: number): HTMLElement[] {
   const r = record(series, parcours, n)
   return r === null ? [] : [h('span', { class: 'record', 'data-test': `record-${n}` }, `Record ${formaterSecondes(r)}`)]
 }
