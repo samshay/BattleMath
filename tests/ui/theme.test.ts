@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 const lire = (p: string) => readFileSync(new URL(`../../${p}`, import.meta.url), 'utf8')
 
@@ -22,6 +22,11 @@ describe('thème spatial', () => {
     const horsRoot = css.replace(/:root\s*\{[^}]*\}/, '')
     expect(horsRoot).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
     expect(horsRoot).not.toMatch(/rgba?\(/)
+  })
+  it('plus aucun glyphe ★ ✨ ⌫ dans src/ui', () => {
+    for (const f of readdirSync(new URL('../../src/ui', import.meta.url))) {
+      expect(lire(`src/ui/${f}`), f).not.toMatch(/[★✨⌫]/)
+    }
   })
   it('polices auto-hébergées importées dans main.ts', () => {
     const main = lire('src/main.ts')

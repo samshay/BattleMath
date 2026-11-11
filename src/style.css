@@ -112,7 +112,7 @@ button:disabled { opacity: 0.4; }
 .pastille[data-etat="juste"] { background: var(--succes); }
 .pastille[data-etat="faux"] { background: var(--erreur); }
 .objectif { margin: 0; font-size: 0.9rem; color: var(--texte-doux); }
-button.discret { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; font-size: 1rem; font-weight: 800; border-color: transparent; background: transparent; color: var(--texte-doux); padding: 0; }
+button.discret { display: inline-flex; align-items: center; gap: 8px; min-height: 56px; font-size: 1rem; font-weight: 800; border-color: transparent; background: transparent; color: var(--texte-doux); padding: 0; }
 .calcul { font-size: 4.25rem; font-weight: 700; line-height: 1; text-align: center; margin-top: 8px; }
 .reponse { min-height: 76px; box-sizing: border-box; border-radius: 22px; background: var(--surface); border: 2px solid var(--primaire); display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: 700; gap: 8px; text-align: center; }
 .reponse.juste { border-color: var(--succes); color: var(--succes); }
@@ -148,7 +148,8 @@ button.discret { display: inline-flex; align-items: center; gap: 8px; min-height
 .parents-ecran figcaption { font-size: 0.85rem; color: var(--texte-doux); text-align: center; }
 .parents-ecran table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
 .parents-ecran th, .parents-ecran td { border: 1px solid var(--bord); padding: 4px 6px; text-align: left; }
-.parents-ecran select, .parents-ecran input[type="number"] { font-size: 1.1rem; padding: 8px; border-radius: 8px; border: 2px solid var(--bord); background: var(--surface); color: var(--texte); }
+.parents-ecran th { color: var(--texte-doux); }
+.parents-ecran select, .parents-ecran input[type="number"] { font-size: 1.1rem; padding: 8px; border-radius: 12px; border: 2px solid var(--bord); background: var(--surface); color: var(--texte); }
 .parents-ecran .question { font-size: 1.5rem; margin: 0; }
 .parents-ecran .option { display: block; padding: 6px 0; }
 .parents-ecran .actions { display: flex; flex-direction: column; gap: 8px; }
@@ -160,7 +161,7 @@ button.discret { display: inline-flex; align-items: center; gap: 8px; min-height
 .grille-faits td[data-etat="en_cours"] { background: var(--fait-en-cours); }
 .grille-faits td[data-etat="maitrise"] { background: var(--fait-maitrise); }
 .parents-ecran .ligne-profil { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.parents-ecran .ligne-profil input[type="text"] { font-size: 1.1rem; padding: 8px; border-radius: 8px; border: 2px solid var(--bord); background: var(--surface); color: var(--texte); width: 10rem; }
+.parents-ecran .ligne-profil input[type="text"] { font-size: 1.1rem; padding: 8px; border-radius: 12px; border: 2px solid var(--bord); background: var(--surface); color: var(--texte); width: 10rem; }
 .parents-ecran .couleurs { display: flex; gap: 6px; }
 .parents-ecran button.couleur { width: 44px; height: 44px; min-height: 0; padding: 0; border-radius: 50%; border: 2px solid transparent; }
 .parents-ecran button.couleur.actif { border-color: var(--texte); box-shadow: 0 0 0 2px var(--surface); }
