@@ -64,6 +64,12 @@ describe('rendreJeu', () => {
     expect(lent.q('.objectif')!.textContent).toContain(`moins de ${(lent.ecran.session().cibleMs / 1000).toFixed(1).replace('.', ',')} secondes`)
   })
 
+  it('affiche le prénom du profil actif sous les pastilles', () => {
+    const j = monter({ donnees: deuxProfils({}, {}, 'p2') })
+    expect(j.q('[data-test="joueur"]')!.textContent).toBe('Joueur 2')
+    expect(j.q('[data-test="joueur"] .pastille-couleur')).not.toBeNull()
+  })
+
   it('la série est enregistrée dans le profil actif', () => {
     const j = monter({ donnees: deuxProfils({}, {}, 'p2') })
     for (let i = 0; i < 10; i++) j.repondreJuste()

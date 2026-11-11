@@ -8,7 +8,7 @@ import { formaterCalcul, formaterSecondes } from '../core/format'
 import { reponseAttendue } from '../core/faits'
 import type { ParcoursId } from '../core/types'
 import { enregistrerSerie } from '../storage/store'
-import { profilActif } from '../storage/schema'
+import { COULEURS, profilActif } from '../storage/schema'
 import {
   annulerCourant, avancer, bilan, calculCourant, corriger, creerSession, etatsPastilles, majFaits, repondre, versSerie,
 } from '../game/session'
@@ -117,6 +117,8 @@ export function rendreJeu(
   function dessiner(): void {
     entete.replaceChildren(
       h('div', { class: 'pastilles' }, ...etatsPastilles(s).map((e) => h('span', { class: 'pastille', 'data-etat': e }))),
+      h('p', { class: 'joueur', 'data-test': 'joueur' },
+        h('span', { class: 'pastille-couleur', style: `background: ${COULEURS[actif.couleur]}` }), actif.prenom),
       h('p', { class: 'objectif' }, `Objectif : moins de ${formaterObjectif(s.cibleMs).replace(/ s$/, ' secondes')} par calcul`),
       boutonAccueil(),
     )

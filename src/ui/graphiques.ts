@@ -3,7 +3,7 @@ import type { Serie } from '../core/types'
 const NS = 'http://www.w3.org/2000/svg'
 const L = 320
 const H = 160
-const MG = 28
+const MG = 36
 const MD = 8
 const MH = 8
 const MB = 20

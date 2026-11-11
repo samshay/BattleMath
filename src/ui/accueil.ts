@@ -14,6 +14,7 @@ import type { Route } from './router'
 export interface ContexteApp {
   donnees: Donnees
   avertissement: Chargement['avertissement']
+  /** Remplace ctx.donnees puis persiste ; renvoie false si l'écriture a échoué. */
   sauver(d: Donnees): boolean
   naviguer(r: Route): void
   selection: { op: ParcoursOp; taille: Taille }
@@ -60,6 +61,7 @@ export function rendreAccueil(ctx: ContexteApp): HTMLElement {
     enfants.push(h('header', {}, h('h1', {}, 'BattleMath'), h('span', { class: 'etoiles' }, `★ ${totalEtoiles(donnees.series)}`)))
 
     enfants.push(rangeeProfils(ctx.donnees.profils, donnees.id, (id) => {
+      if (id === donnees.id) return
       ctx.sauver(choisirProfil(ctx.donnees, id))
       Object.assign(ctx.selection, selectionDepuisProfil(profilActif(ctx.donnees)))
       dessiner()

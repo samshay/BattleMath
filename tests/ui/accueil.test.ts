@@ -125,6 +125,19 @@ describe('profils sur l\'accueil', () => {
     expect(racine.querySelector('[data-test="continuer"]')).not.toBeNull()
   })
 
+  it('appui sur la pastille déjà active : rien', () => {
+    const ctx = ctxDe(deuxProfils())
+    const racine = rendreAccueil(ctx)
+    racine.querySelector<HTMLButtonElement>('button.profil[data-id="p1"]')!.click()
+    expect(ctx.sauver).not.toHaveBeenCalled()
+  })
+
+  it('pastilles : aria-pressed suit le profil actif', () => {
+    const racine = rendreAccueil(ctxDe(deuxProfils({}, {}, 'p2')))
+    expect(racine.querySelector('button.profil[data-id="p2"]')!.getAttribute('aria-pressed')).toBe('true')
+    expect(racine.querySelector('button.profil[data-id="p1"]')!.getAttribute('aria-pressed')).toBe('false')
+  })
+
   it('profil sans dernier parcours : retour sur add-1', () => {
     const ctx = ctxDe(deuxProfils())
     ctx.selection = { op: 'mul', taille: 2 }

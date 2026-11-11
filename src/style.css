@@ -51,10 +51,10 @@ button:disabled { opacity: 0.4; }
 .accueil header { display: flex; justify-content: space-between; align-items: center; }
 .accueil h1 { margin: 0; font-size: 1.75rem; }
 .etoiles { font-size: 1.5rem; color: var(--primaire); }
-.profils { display: flex; gap: 8px; overflow-x: auto; }
-.profil { min-height: 56px; display: flex; align-items: center; gap: 8px; flex: 0 0 auto; white-space: nowrap; }
+.profils { display: flex; flex-wrap: wrap; gap: 8px; }
+.profil { border-width: 3px; border-color: var(--bord); min-height: 56px; display: flex; align-items: center; gap: 8px; flex: 0 0 auto; white-space: nowrap; }
 .pastille-couleur { width: 24px; height: 24px; border-radius: 50%; flex: 0 0 auto; }
-.profil.actif { background: transparent; color: inherit; border: 3px solid var(--primaire); font-weight: bold; }
+.profil.actif { background: transparent; color: inherit; border-color: var(--primaire); font-weight: bold; }
 .choix { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 .choix.tailles { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 1fr; }
 .actif { background: var(--primaire); border-color: var(--primaire); color: #fff; }
@@ -118,5 +118,7 @@ button:disabled { opacity: 0.4; }
 .parents-ecran .ligne-profil { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .parents-ecran .ligne-profil input[type="text"] { font-size: 1.1rem; padding: 8px; border-radius: 8px; border: 2px solid var(--bord); background: var(--surface); color: var(--texte); width: 10rem; }
 .parents-ecran .couleurs { display: flex; gap: 6px; }
-.parents-ecran button.couleur { width: 32px; height: 32px; min-height: 0; padding: 0; border-radius: 50%; border: 2px solid transparent; }
+.parents-ecran button.couleur { width: 44px; height: 44px; min-height: 0; padding: 0; border-radius: 50%; border: 2px solid transparent; }
 .parents-ecran button.couleur.actif { border-color: var(--texte); box-shadow: 0 0 0 2px var(--surface); }
+.joueur { margin: 0; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.85rem; opacity: 0.8; }
+.joueur .pastille-couleur { width: 14px; height: 14px; }
