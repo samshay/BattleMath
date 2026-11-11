@@ -19,7 +19,7 @@ function ctxDe(donnees: Donnees = donneesVides(), avertissement: ContexteApp['av
 }
 
 const serieValidee = (parcours: Serie['parcours'], niveau: number): Serie => ({
-  date: '2026-11-11T10:00:00.000Z', parcours, niveau, bonnes: 10, tempsMedian: 2, tempsCible: 4, reussie: true, validee: true,
+  date: '2026-11-11T10:00:00.000Z', parcours, niveau, bonnes: 10, tempsMedian: 2, tempsTotal: 20, tempsCible: 4, reussie: true, validee: true,
 })
 
 describe('rendreParcours', () => {
@@ -112,14 +112,19 @@ describe('rendreParcours et ctx.selection', () => {
     expect(ctx.selection).toEqual({ op: 'mul', taille: 2 })
   })
 
-  it('record : « Record 4,2 s » sur le bon niveau seulement', () => {
-    const d = avecProfil({ series: [{ ...serieValidee('add-1', 1), tempsMedian: 4200 }] })
+  it('record : « Record 38,2 s » (temps total) sur le bon niveau seulement', () => {
+    const d = avecProfil({ series: [{ ...serieValidee('add-1', 1), tempsMedian: 4200, tempsTotal: 38200 }] })
     const racine = rendreParcours(ctxDe(d))
     const r = racine.querySelector('button.niveau[data-niveau="1"] span.record')!
-    expect(r.textContent).toBe('Record 4,2 s')
+    expect(r.textContent).toBe('Record 38,2 s')
     expect(racine.querySelector('[data-test="record-1"]')).toBe(r)
     expect(racine.querySelector('[data-test="record-2"]')).toBeNull()
     expect(racine.querySelectorAll('span.record')).toHaveLength(1)
+  })
+
+  it('record : absent si la série validée n\'a pas de tempsTotal (anciennes données)', () => {
+    const { tempsTotal: _t, ...ancienne } = serieValidee('add-1', 1)
+    expect(rendreParcours(ctxDe(avecProfil({ series: [ancienne] }))).querySelector('span.record')).toBeNull()
   })
 
   it('record : absent si la série n\'est pas réussie', () => {

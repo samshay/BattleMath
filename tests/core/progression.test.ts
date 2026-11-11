@@ -22,9 +22,12 @@ function serie(
   tempsMedian: number,
   cible: number,
   date = '2026-11-10T10:00:00',
+  tempsTotal: number | null = tempsMedian * 10,
 ): Serie {
   const reussie = bonnes >= 9
-  return { date, parcours, niveau, bonnes, tempsMedian, tempsCible: cible, reussie, validee: reussie && tempsMedian <= cible }
+  const s: Serie = { date, parcours, niveau, bonnes, tempsMedian, tempsCible: cible, reussie, validee: reussie && tempsMedian <= cible }
+  if (tempsTotal !== null) s.tempsTotal = tempsTotal
+  return s
 }
 
 const valide = (p: ParcoursId, n: number) => serie(p, n, 10, 3000, 5000)
@@ -154,7 +157,7 @@ describe('etatFait', () => {
   })
 })
 
-describe('record', () => {
+describe('record (temps total)', () => {
   it('aucune série : null', () => {
     expect(record([], 'add-1', 1)).toBeNull()
   })
@@ -166,17 +169,27 @@ describe('record', () => {
   it('ignore les séries réussies mais non validées (trop lentes)', () => {
     expect(record([serie('add-1', 1, 10, 6000, 5000)], 'add-1', 1)).toBeNull()
     const series = [serie('add-1', 1, 10, 1000, 500), serie('add-1', 1, 10, 4000, 5000)]
-    expect(record(series, 'add-1', 1)).toBe(4000)
+    expect(record(series, 'add-1', 1)).toBe(40000)
   })
 
-  it('plus petit tempsMedian parmi les validées', () => {
-    const series = [serie('add-1', 1, 10, 4000, 5000), serie('add-1', 1, 9, 3200, 5000), serie('add-1', 1, 7, 900, 5000)]
-    expect(record(series, 'add-1', 1)).toBe(3200)
+  it('plus petit tempsTotal parmi les validées (pas la médiane)', () => {
+    const series = [
+      serie('add-1', 1, 10, 4000, 5000, undefined, 38200),
+      serie('add-1', 1, 9, 3000, 5000, undefined, 41000),
+      serie('add-1', 1, 7, 900, 5000, undefined, 5000),
+    ]
+    expect(record(series, 'add-1', 1)).toBe(38200)
+  })
+
+  it('ignore les séries validées sans tempsTotal', () => {
+    const series = [serie('add-1', 1, 10, 1000, 5000, undefined, null), serie('add-1', 1, 10, 4000, 5000, undefined, 45000)]
+    expect(record(series, 'add-1', 1)).toBe(45000)
+    expect(record([series[0]!], 'add-1', 1)).toBeNull()
   })
 
   it('filtre par parcours et par niveau', () => {
     const series = [serie('add-1', 2, 10, 1000, 5000), serie('sub-1', 1, 10, 1000, 5000), serie('add-1', 1, 10, 4500, 5000)]
-    expect(record(series, 'add-1', 1)).toBe(4500)
+    expect(record(series, 'add-1', 1)).toBe(45000)
     expect(record(series, 'mul-1', 1)).toBeNull()
   })
 })

@@ -106,12 +106,17 @@ function lireFait(x: unknown): Fait | null {
 
 function lireSerie(x: unknown): Serie | null {
   if (!estObjet(x)) return null
-  const { date, parcours, niveau, bonnes, tempsMedian, tempsCible, reussie, validee } = x
+  const { date, parcours, niveau, bonnes, tempsMedian, tempsTotal, tempsCible, reussie, validee } = x
   if (typeof date !== 'string' || !estParcoursId(parcours)) return null
   if (!entierDans(niveau, 1, 8) || !entierDans(bonnes, 0, 10)) return null
   if (!nombre(tempsMedian) || tempsMedian < 0 || !nombre(tempsCible) || tempsCible <= 0) return null
   if (typeof reussie !== 'boolean' || typeof validee !== 'boolean') return null
-  return { date, parcours, niveau, bonnes, tempsMedian, tempsCible, reussie, validee }
+  if (tempsTotal !== undefined && (!nombre(tempsTotal) || tempsTotal < 0)) return null
+  return {
+    date, parcours, niveau, bonnes, tempsMedian,
+    ...(tempsTotal === undefined ? {} : { tempsTotal }),
+    tempsCible, reussie, validee,
+  }
 }
 
 function lireReglages(x: unknown): Reglages | null {

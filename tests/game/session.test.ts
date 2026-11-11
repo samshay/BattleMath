@@ -73,7 +73,7 @@ describe('session', () => {
     const serie = versSerie(s, '2026-11-11')
     expect(serie).toEqual({
       date: '2026-11-11', parcours: 'mul-1', niveau: 3, bonnes: 10,
-      tempsMedian: 1450, tempsCible: 4000, reussie: true, validee: true,
+      tempsMedian: 1450, tempsTotal: 14500, tempsCible: 4000, reussie: true, validee: true,
     })
   })
 

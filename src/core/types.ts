@@ -30,6 +30,8 @@ export interface Serie {
   niveau: number
   bonnes: number
   tempsMedian: number
+  /** Somme des 10 temps de réponse (ms). Absent des séries antérieures à cette donnée. */
+  tempsTotal?: number
   tempsCible: number
   reussie: boolean
   validee: boolean

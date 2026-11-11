@@ -84,6 +84,20 @@ describe('migrer v2', () => {
       expect(migrer(v2({ series: [serie(o)] }))).toEqual(err('structure_invalide'))
     }
   })
+  test('série avec tempsTotal : acceptée et conservée', () => {
+    const r = migrer(v2({ series: [serie({ tempsTotal: 38200 })] }))
+    expect(r.ok && r.donnees.profils[0]!.series[0]!.tempsTotal).toBe(38200)
+  })
+  test('série sans tempsTotal (anciennes données) : acceptée, champ absent', () => {
+    const r = migrer(v2({ series: [serie()] }))
+    expect(r.ok).toBe(true)
+    expect(r.ok && r.donnees.profils[0]!.series[0]!.tempsTotal).toBeUndefined()
+  })
+  test('tempsTotal négatif ou non numérique : invalide', () => {
+    for (const t of [-1, 'x', null, Infinity]) {
+      expect(migrer(v2({ series: [serie({ tempsTotal: t })] }))).toEqual(err('structure_invalide'))
+    }
+  })
   test('reglages complétés par défaut', () => {
     expect(migrer(v2({ reglages: {} }))).toEqual({ ok: true, donnees: donneesVides() })
   })

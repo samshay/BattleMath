@@ -317,42 +317,48 @@ describe('rendreJeu', () => {
     expect(j.q('[data-test="suivant"]')).toBeNull()
   })
 
+  it('fin : ligne « Temps de la série » = somme des temps (10 × pas)', () => {
+    const j = monter({ pas: 3500 })
+    for (let i = 0; i < 10; i++) j.repondreJuste()
+    expect(j.q('[data-test="temps-total"]')!.textContent).toBe('Temps de la série : 35,0 s')
+  })
+
   describe('record', () => {
-    const ancienne = (tempsMedian: number, reussie = true) => avecProfil({ series: [{
-      date: '2026-11-10T10:00:00.000Z', parcours: 'mul-1', niveau: 1, bonnes: reussie ? 10 : 5, tempsMedian, tempsCible: 99999, reussie, validee: reussie,
+    const ancienne = (tempsTotal: number, reussie = true) => avecProfil({ series: [{
+      date: '2026-11-10T10:00:00.000Z', parcours: 'mul-1', niveau: 1, bonnes: reussie ? 10 : 5, tempsMedian: tempsTotal / 10, tempsTotal, tempsCible: 99999, reussie, validee: reussie,
     }] })
 
     it('premier record du niveau', () => {
       const j = monter({ pas: 2000 })
       for (let i = 0; i < 10; i++) j.repondreJuste()
       const el = j.q('[data-test="record"]')!
-      expect(el.textContent).toBe('Premier record : 2,0 s')
+      expect(el.textContent).toBe('Premier record : 20,0 s')
       expect(el.classList.contains('record-battu')).toBe(false)
     })
 
     it('record battu : ancien et nouveau, classe record-battu, étincelles', () => {
-      const j = monter({ pas: 2000, donnees: ancienne(5100) })
+      const j = monter({ pas: 2000, donnees: ancienne(51000) })
       for (let i = 0; i < 10; i++) j.repondreJuste()
       const el = j.q('[data-test="record"]')!
-      expect(el.textContent).toContain('Nouveau record ! 2,0 s (avant : 5,1 s)')
+      expect(el.textContent).toContain('Nouveau record ! 20,0 s (avant : 51,0 s)')
       expect(el.classList.contains('record-battu')).toBe(true)
       expect(el.querySelector('.etincelles')).not.toBeNull()
     })
 
     it('record non battu : discret', () => {
-      const j = monter({ pas: 6000, donnees: ancienne(5100) })
+      const j = monter({ pas: 6000, donnees: ancienne(51000) })
       for (let i = 0; i < 10; i++) j.repondreJuste()
       const el = j.q('[data-test="record"]')!
-      expect(el.textContent).toBe('Record : 5,1 s')
+      expect(el.textContent).toBe('Record : 51,0 s')
       expect(el.classList.contains('discret')).toBe(true)
       expect(el.classList.contains('record-battu')).toBe(false)
     })
 
     it('record égalé : discret, pas de record battu', () => {
-      const j = monter({ pas: 5100, donnees: ancienne(5100) })
+      const j = monter({ pas: 5100, donnees: ancienne(51000) })
       for (let i = 0; i < 10; i++) j.repondreJuste()
       const el = j.q('[data-test="record"]')!
-      expect(el.textContent).toBe('Record : 5,1 s')
+      expect(el.textContent).toBe('Record : 51,0 s')
       expect(el.classList.contains('record-battu')).toBe(false)
     })
 
@@ -364,7 +370,7 @@ describe('rendreJeu', () => {
     })
 
     it('série non réussie : pas de record', () => {
-      const j = monter({ pas: 1000, donnees: ancienne(5100) })
+      const j = monter({ pas: 1000, donnees: ancienne(51000) })
       j.repondreFaux(); j.repondreJuste()
       j.repondreFaux(); j.repondreJuste()
       for (let i = 0; i < 8; i++) j.repondreJuste()

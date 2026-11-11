@@ -193,6 +193,7 @@ export function rendreJeu(
     racine.replaceChildren(h('div', { class: 'fin' },
       h('p', { class: 'score' }, `${b.bonnes} sur 10`),
       h('p', { class: 'temps' }, `Ton temps : ${formaterSecondes(b.tempsMedian)} par calcul (objectif ${formaterObjectif(s.cibleMs)})`),
+      h('p', { class: 'temps-total', 'data-test': 'temps-total' }, `Temps de la série : ${formaterSecondes(serie.tempsTotal ?? 0)}`),
       h('p', { class: `verdict ${b.raison}` }, verdict),
       ...ligneRecord,
       ...(enregistre ? [] : [h('p', { class: 'avertissement', 'data-test': 'non-enregistre' }, MSG_NON_ENREGISTRE)]),

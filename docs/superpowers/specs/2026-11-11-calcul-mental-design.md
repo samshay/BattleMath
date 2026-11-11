@@ -356,6 +356,7 @@ sélection de texte, pas de clavier système : le pavé est dans la page.
       niveau: 4,
       bonnes: 9,                 // 0-10
       tempsMedian: 4800,         // ms
+      tempsTotal: 48000,         // ms, somme des 10 temps (optionnel : absent des anciennes séries) ; sert au record
       tempsCible: 6000,          // ms, copié au moment de la série
       reussie: true,
       validee: true

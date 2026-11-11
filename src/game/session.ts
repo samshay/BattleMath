@@ -78,6 +78,7 @@ export function versSerie(s: Session, date: string): Serie {
     niveau: s.niveau,
     bonnes: b.bonnes,
     tempsMedian: b.tempsMedian,
+    tempsTotal: s.reponses.reduce((somme, r) => somme + r.tempsMs, 0),
     tempsCible: s.cibleMs,
     reussie: b.reussie,
     validee: b.validee,
